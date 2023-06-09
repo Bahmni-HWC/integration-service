@@ -81,7 +81,9 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
         } else if (patientEncounter == null && subject != null) {
             subjectService.createRegistrationEncounter(patient, subject, metaData);
         } else if (patientEncounter == null && subject == null) {
-            subjectService.processSubjectNotFound(patient);
+            Subject avniSubject = subjectService.createSubjectFromPatient(patient, constants);
+            System.out.println("Created Avni Subject: " + avniSubject);
+            //subjectService.processSubjectNotFound(patient);
         }
     }
 

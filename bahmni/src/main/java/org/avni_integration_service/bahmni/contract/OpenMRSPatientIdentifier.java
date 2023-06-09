@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class OpenMRSPatientIdentifier {
     private String identifier;
     private boolean preferred;
+    private OpenMRSPatientIdentifierType identifierType;
 
     public OpenMRSPatientIdentifier() {
     }
@@ -28,5 +29,13 @@ public class OpenMRSPatientIdentifier {
 
     public void setPreferred(boolean preferred) {
         this.preferred = preferred;
+    }
+
+    public OpenMRSPatientIdentifierType getIdentifierType() {
+        return identifierType;
+    }
+
+    public void setIdentifierType(OpenMRSPatientIdentifierType identifierType) {
+        this.identifierType = identifierType;
     }
 }
