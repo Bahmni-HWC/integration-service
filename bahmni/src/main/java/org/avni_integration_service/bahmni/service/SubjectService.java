@@ -138,7 +138,8 @@ public class SubjectService {
         Optional<OpenMRSPatientIdentifier> identifier = patient.getIdentifiers().stream().filter(id -> id.isPreferred()).findFirst();
         subject.setExternalId(patient.getUuid());
         if (identifier.isPresent()) {
-            subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier());
+            String prefix = constants.getValue(ConstantKey.BahmniIdentifierPrefix.name());
+            subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier().replace(prefix, ""));
         }
 
 //        subject.setVoided(MapUtil.getBoolean(DemandIsVoidedField, response));
