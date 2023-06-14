@@ -19,6 +19,7 @@ import org.ict4h.atomfeed.client.domain.Event;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -102,6 +103,21 @@ public class PatientService {
         )));
         person.setBirthDate(subject.getDateOfBirth());
         person.setGender(FormatAndParseUtil.fromAvniToOpenMRSGender((String) subject.getObservation("Gender")));
+
+        OpenMRSSavePersonAddress personAddress = new OpenMRSSavePersonAddress();
+
+        HashMap<String, Object> locationMap = (HashMap<String, Object>) subject.get("location");
+        String cityVillage = (String) locationMap.get("City/Village");
+        String subDistrict = (String) locationMap.get("Sub District");
+        String district = (String) locationMap.get("District");
+        String state = (String) locationMap.get("State");
+
+        personAddress.setCityVillage(cityVillage);
+        personAddress.setAddress4(subDistrict);
+        personAddress.setCountyDistrict(district);
+        personAddress.setStateProvince(state);
+
+        person.setAddresses(List.of(personAddress));
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
         patient.setPerson(uuidHolder.getUuid());

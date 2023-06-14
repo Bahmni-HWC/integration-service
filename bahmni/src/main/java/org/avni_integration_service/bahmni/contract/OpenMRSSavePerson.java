@@ -12,6 +12,8 @@ public class OpenMRSSavePerson {
     private List<OpenMRSSaveName> names;
     private String gender;
 
+    private List<OpenMRSSavePersonAddress> addresses;
+
     @JsonProperty("birthdate")
     private String birthDate;
 
@@ -37,5 +39,13 @@ public class OpenMRSSavePerson {
 
     public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public List<OpenMRSSavePersonAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<OpenMRSSavePersonAddress> addresses) {
+        this.addresses = addresses;
     }
 }
