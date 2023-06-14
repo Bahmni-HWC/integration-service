@@ -19,6 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
 @Component
 public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
     private static final Logger logger = Logger.getLogger(PatientEventWorker.class);
@@ -40,6 +44,13 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
 
     @Value("${bahmni.app.first.run}")
     private boolean isFirstRun;
+
+    @Value("${bahmni.avni.address.knownSubDistricts}")
+    private String knownSubDistricts;
+
+    @Value("${bahmni.avni.address.knownVillages}")
+    private String knownVillages;
+
 
     @Override
     public void process(Event event) {
@@ -81,8 +92,34 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
         } else if (patientEncounter == null && subject != null) {
             subjectService.createRegistrationEncounter(patient, subject, metaData);
         } else if (patientEncounter == null && subject == null) {
-            subjectService.processSubjectNotFound(patient);
+            if (!isKnownPatientLocation(patient)) {
+                return;
+            }
+            Subject avniSubject = subjectService.createSubjectFromPatient(patient, constants, metaData);
+            logger.debug("Created Avni Subject: " + avniSubject);
+            //subjectService.processSubjectNotFound(patient);
         }
+    }
+
+    private boolean isKnownPatientLocation(OpenMRSPatient patient) {
+        if (patient.getPerson().getPreferredAddress() == null) {
+            logger.error("Can not sync patients to Avni. Patient Address is null");
+            return false;
+        }
+        String subDistrict = patient.getPerson().getPreferredAddress().getAddress4();
+        String village = patient.getPerson().getPreferredAddress().getCityVillage();
+
+        List<String> knownSubDistrictList = Arrays.asList(knownSubDistricts.split(","));
+        List<String> knownVillageList = Arrays.asList(knownVillages.split(","));
+        if (!knownSubDistrictList.contains(subDistrict.toUpperCase().trim())) {
+            return false;
+        }
+
+        if (!knownVillageList.contains(village.toUpperCase().trim())) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override

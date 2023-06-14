@@ -5,14 +5,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OpenMRSName {
     private String givenName;
+    private String middleName;
     private String familyName;
     private String display;
 
     public OpenMRSName() {
     }
 
-    public OpenMRSName(String givenName, String familyName) {
+    public OpenMRSName(String givenName, String middleName, String familyName) {
         this.givenName = givenName;
+        this.middleName = middleName;
         this.familyName = familyName;
     }
 
@@ -38,5 +40,13 @@ public class OpenMRSName {
 
     public void setDisplay(String display) {
         this.display = display;
+    }
+
+    public String getMiddleName() {
+        return middleName;
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
 }
