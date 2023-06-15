@@ -12,6 +12,8 @@ import java.util.Map;
 
 public class AvniBaseContract implements ObservationHolder {
     private static final String ObservationsFieldName = "observations";
+    public static final String LocationsFieldName = "location";
+
     protected Map<String, Object> map = new HashMap<>();
 
     public AvniBaseContract() {
@@ -113,5 +115,17 @@ public class AvniBaseContract implements ObservationHolder {
         Object observations = get(ObservationsFieldName);
         if (observations == null) return new HashMap<>();
         return (Map<String, Object>) observations;
+    }
+    @JsonIgnore
+    public Object getLocation(String conceptName) {
+        Map<String, Object> locations = getLocations();
+        return locations.get(conceptName);
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getLocations() {
+        Object locations = get(LocationsFieldName);
+        if (locations == null) return new HashMap<>();
+        return (Map<String, Object>) locations;
     }
 }

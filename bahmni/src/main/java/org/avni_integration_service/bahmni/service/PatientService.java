@@ -102,6 +102,15 @@ public class PatientService {
         )));
         person.setBirthDate(subject.getDateOfBirth());
         person.setGender(FormatAndParseUtil.fromAvniToOpenMRSGender((String) subject.getObservation("Gender")));
+
+        OpenMRSSavePersonAddress personAddress = new OpenMRSSavePersonAddress();
+
+        personAddress.setCityVillage((String) subject.getLocation("City/Village"));
+        personAddress.setAddress4((String) subject.getLocation("Sub District"));
+        personAddress.setCountyDistrict((String) subject.getLocation("District"));
+        personAddress.setStateProvince((String) subject.getLocation("State"));
+
+        person.setAddresses(List.of(personAddress));
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
         patient.setPerson(uuidHolder.getUuid());
