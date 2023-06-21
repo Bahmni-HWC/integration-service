@@ -111,6 +111,15 @@ public class PatientService {
         personAddress.setStateProvince((String) subject.getLocation("State"));
 
         person.setAddresses(List.of(personAddress));
+
+        OpenMRSSavePersonAttributeType phoneNumberAttributeType = new OpenMRSSavePersonAttributeType("3a870d1d-4f0c-4348-8cab-84b0e265b4dd", "phoneNumber");
+        OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) subject.getObservation("Phone Number"));
+
+        OpenMRSSavePersonAttributeType fatherOrMotherNameAttributeType = new OpenMRSSavePersonAttributeType("021c8ef0-0c2a-11ee-be56-0242ac120002", "father/motherName");
+        OpenMRSSavePersonAttribute fatherOrMotherNameAttribute = new OpenMRSSavePersonAttribute(fatherOrMotherNameAttributeType, (String) subject.getObservation("Father/Mother's Name"));
+
+        person.setAttributes(List.of(phoneNumberAttribute, fatherOrMotherNameAttribute));
+
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
         patient.setPerson(uuidHolder.getUuid());
