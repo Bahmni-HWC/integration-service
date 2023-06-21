@@ -2,7 +2,9 @@ package org.avni_integration_service.bahmni.repository.intmapping;
 
 import org.avni_integration_service.bahmni.BahmniMappingGroup;
 import org.avni_integration_service.bahmni.BahmniMappingType;
+import org.avni_integration_service.bahmni.ConstantKey;
 import org.avni_integration_service.bahmni.MappingMetaDataCollection;
+import org.avni_integration_service.integration_data.domain.Constants;
 import org.avni_integration_service.integration_data.domain.MappingGroup;
 import org.avni_integration_service.integration_data.domain.MappingMetaData;
 import org.avni_integration_service.integration_data.domain.MappingType;
@@ -94,5 +96,15 @@ public class MappingService {
 
     public MappingMetaData findByMappingGroupAndMappingType(MappingGroup patientSubject, MappingType mappingType) {
         return mappingMetaDataRepository.findByMappingGroupAndMappingType(patientSubject, mappingType);
+    }
+
+    public String getProviderUUIDForAvniUser(String avniUser, Constants constants) {
+        if (avniUser == null) {
+            return constants.getValue(ConstantKey.IntegrationBahmniProvider.name());
+        }
+        String providerUuid = getBahmniValue(bahmniMappingGroup.user, bahmniMappingType.providerUUID, avniUser);
+        if (providerUuid == null)
+            providerUuid = constants.getValue(ConstantKey.IntegrationBahmniProvider.name());
+        return providerUuid;
     }
 }

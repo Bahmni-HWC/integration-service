@@ -15,6 +15,7 @@ public class BahmniMappingGroup {
     public final MappingGroup programEncounter;
     public final MappingGroup observation;
     public final MappingGroup common;
+    public final MappingGroup user;
 
     @Autowired
     public BahmniMappingGroup(MappingGroupRepository mappingGroupRepository) {
@@ -24,5 +25,6 @@ public class BahmniMappingGroup {
         this.programEncounter = mappingGroupRepository.findByName("ProgramEncounter");
         this.observation = mappingGroupRepository.findByName("Observation");
         this.common = mappingGroupRepository.findByName("Common");
+        this.user = mappingGroupRepository.findByName("User");
     }
 }
