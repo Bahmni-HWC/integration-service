@@ -14,11 +14,7 @@ import org.avni_integration_service.util.FormatAndParseUtil;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -141,6 +137,26 @@ public class SubjectService {
             String prefix = constants.getValue(ConstantKey.BahmniIdentifierPrefix.name());
             subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier().replace(prefix, ""));
         }
+
+        // Set RCH ID
+        List<OpenMRSPatientIdentifier> identifiers = patient.getIdentifiers();
+        Optional<OpenMRSPatientIdentifier> rchIdentifier = patient.getIdentifiers().stream()
+                .filter(id -> id.getIdentifierType().getUuid().equals("3766473c-0c29-11ee-be56-0242ac120002"))
+                .findFirst();
+        if (rchIdentifier.isPresent()) {
+            Long rchId = Long.parseLong(rchIdentifier.get().getIdentifier());
+            subject.addObservation("RCH ID", rchId);
+        }
+
+        // Set Nikshay ID
+        Optional<OpenMRSPatientIdentifier> nikshayIdentifier = patient.getIdentifiers().stream()
+                .filter(id -> id.getIdentifierType().getUuid().equals("45bcdf58-0c29-11ee-be56-0242ac120002"))
+                .findFirst();
+        if (nikshayIdentifier.isPresent()) {
+            Long nikshayId = Long.parseLong(nikshayIdentifier.get().getIdentifier());
+            subject.addObservation("Nikshay ID", nikshayId);
+        }
+
 
         String phoneNumber = patient.getPerson().getAttributes().getPhoneNumber();
         if (phoneNumber != null && phoneNumber.startsWith("+91")) {
