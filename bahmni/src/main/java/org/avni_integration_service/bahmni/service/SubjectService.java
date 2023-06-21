@@ -142,10 +142,17 @@ public class SubjectService {
             subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier().replace(prefix, ""));
         }
 
+        String phoneNumber = patient.getPerson().getAttributes().getPhoneNumber();
+        if (phoneNumber != null && phoneNumber.startsWith("+91")) {
+            phoneNumber = phoneNumber.substring(3);
+        }
+        subject.addObservation("Phone Number", phoneNumber);
+
+        subject.addObservation("Father/Mother's Name", patient.getPerson().getAttributes().getFatherOrMotherName());
+
 //        subject.setVoided(MapUtil.getBoolean(DemandIsVoidedField, response));
 //        String[] arrayOfTCs = MapUtil.getString(DemandTargetCommunity, response) != null ? MapUtil.getString(DemandTargetCommunity, response).split(";") : null;
 //        subject.addObservation("Target Community", arrayOfTCs);
-
         return avniSubjectRepository.create(subject);
     }
 }

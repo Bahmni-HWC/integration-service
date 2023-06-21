@@ -36,6 +36,24 @@ public class OpenMRSPersonAttributes extends ArrayList<OpenMRSPersonAttribute> i
         return "";
     }
 
+    public String getPhoneNumber() {
+        for (OpenMRSPersonAttribute attribute : this) {
+            if(attribute.getAttributeType().isPhoneNumber()) {
+                return attribute.getValue().toString();
+            }
+        }
+        return "";
+    }
+
+    public String getFatherOrMotherName() {
+        for (OpenMRSPersonAttribute attribute : this) {
+            if(attribute.getAttributeType().isFatherOrMotherName()) {
+                return attribute.getValue().toString();
+            }
+        }
+        return "";
+    }
+
     @Override
     public String toJsonString() {
         HashMap<String, Object> personAttributes = new HashMap<>();

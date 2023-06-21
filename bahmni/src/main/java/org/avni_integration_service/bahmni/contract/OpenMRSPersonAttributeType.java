@@ -42,4 +42,11 @@ public class OpenMRSPersonAttributeType {
     public boolean isMiddleLocalName() {
         return display.equalsIgnoreCase("middleNameLocal");
     }
+    public boolean isPhoneNumber() {
+        return display.equalsIgnoreCase("phoneNumber");
+    }
+
+    public boolean isFatherOrMotherName() {
+        return display.equalsIgnoreCase("father/motherName");
+    }
 }
