@@ -109,8 +109,7 @@ public class AvniEncounterService extends BaseAvniEncounterService {
             logger.debug(String.format("Skipping voided Avni encounter %s", generalEncounter.getUuid()));
             return null;
         }
-
-        var visit = visitService.getAvniRegistrationVisit(patient.getUuid());
+        var visit = visitService.getOrCreateVisit(patient);
         logger.debug(String.format("Creating new Bahmni Encounter for Avni general encounter %s", generalEncounter.getUuid()));
         var openMRSEncounter = encounterMapper.mapEncounter(generalEncounter, patient.getUuid(), constants, visit);
         var savedEncounter = openMRSEncounterRepository.createEncounter(openMRSEncounter);

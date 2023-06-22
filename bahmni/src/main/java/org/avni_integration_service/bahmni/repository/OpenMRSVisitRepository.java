@@ -21,8 +21,8 @@ public class OpenMRSVisitRepository extends BaseOpenMRSRepository {
         super(openMRSWebClient);
     }
 
-    public OpenMRSVisit getVisit(String patientUuid, String locationUuid, String visitTypeUuid) {
-        String json = openMRSWebClient.get("%s?patient=%s&location=%s&v=full".formatted(resourcePath(), patientUuid, locationUuid));
+    public OpenMRSVisit getActiveVisit(String patientUuid, String locationUuid, String visitTypeUuid) {
+        String json = openMRSWebClient.get("%s?patient=%s&location=%s&v=full&includeInactive=false".formatted(resourcePath(), patientUuid, locationUuid));
         SearchResults<OpenMRSVisit> searchResults = ObjectJsonMapper.readValue(json, new TypeReference<SearchResults<OpenMRSVisit>>() {
         });
         var filteredByVisitType = new SearchResults<OpenMRSVisit>();

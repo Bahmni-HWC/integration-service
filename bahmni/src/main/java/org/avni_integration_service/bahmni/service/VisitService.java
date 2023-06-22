@@ -14,6 +14,7 @@ import org.avni_integration_service.bahmni.repository.OpenMRSVisitRepository;
 import org.avni_integration_service.util.FormatAndParseUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -34,11 +35,11 @@ public class VisitService {
         this.bahmniMappingType = bahmniMappingType;
     }
 
-    public OpenMRSVisit getAvniRegistrationVisit(String patientUuid) {
+    public OpenMRSVisit getActiveVisitForPatient(String patientUuid) {
         Constants allConstants = constantsRepository.findAllConstants();
         String locationUuid = allConstants.getValue(ConstantKey.IntegrationBahmniLocation.name());
         String visitTypeUuid = allConstants.getValue(ConstantKey.IntegrationBahmniVisitType.name());
-        return openMRSVisitRepository.getVisit(patientUuid, locationUuid, visitTypeUuid);
+        return openMRSVisitRepository.getActiveVisit(patientUuid, locationUuid, visitTypeUuid);
     }
 
     private OpenMRSVisit getAvniRegistrationVisit(String patientUuid, Enrolment enrolment, String visitTypeUuid) {
@@ -77,6 +78,18 @@ public class VisitService {
         return visit;
     }
 
+    private OpenMRSVisit createVisit(OpenMRSPatient patient, String location, String visitType) {
+        OpenMRSSaveVisit openMRSSaveVisit = new OpenMRSSaveVisit();
+        openMRSSaveVisit.setLocation(location);
+        openMRSSaveVisit.setVisitType(visitType);
+        openMRSSaveVisit.setPatient(patient.getUuid());
+        String startDatetime = FormatAndParseUtil.toISODateString(new Date());
+        openMRSSaveVisit.setStartDatetime(startDatetime);
+        OpenMRSVisit visit = openMRSVisitRepository.createVisit(openMRSSaveVisit);
+        logger.debug("Created new visit with uuid %s".formatted(visit.getUuid()));
+        return visit;
+    }
+
     private List<OpenMRSSaveVisitAttribute> visitAttributes(Subject subject) {
         String avniIdAttributeType = mappingService.getBahmniValue(bahmniMappingGroup.common,
                 bahmniMappingType.avniUUIDVisitAttributeType);
@@ -110,9 +123,20 @@ public class VisitService {
     }
 
     public OpenMRSVisit getOrCreateVisit(OpenMRSPatient patient, Subject subject) {
-        var visit = getAvniRegistrationVisit(patient.getUuid());
+        var visit = getActiveVisitForPatient(patient.getUuid());
         if (visit == null) {
             return createVisit(patient, subject);
+        }
+        logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
+        return visit;
+    }
+
+    public OpenMRSVisit getOrCreateVisit(OpenMRSPatient patient) {
+        var visit = getActiveVisitForPatient(patient.getUuid());
+        if (visit == null) {
+            String visitTypeUuid = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniVisitType.name());
+            String locationUuid = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniLocation.name());
+            return createVisit(patient, locationUuid, visitTypeUuid);
         }
         logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
         return visit;
@@ -140,7 +164,7 @@ public class VisitService {
         Constants allConstants = constantsRepository.findAllConstants();
         String locationUuid = allConstants.getValue(ConstantKey.IntegrationBahmniLocation.name());
         String visitType = mappingService.getBahmniValue(bahmniMappingGroup.programEnrolment, bahmniMappingType.communityEnrolmentVisitType, enrolment.getProgram());
-        OpenMRSVisit visit = openMRSVisitRepository.getVisit(communityEnrolmentEncounter.getPatient().getUuid(), locationUuid, visitType);
+        OpenMRSVisit visit = openMRSVisitRepository.getActiveVisit(communityEnrolmentEncounter.getPatient().getUuid(), locationUuid, visitType);
         openMRSVisitRepository.deleteVisit(visit.getUuid());
     }
 }
