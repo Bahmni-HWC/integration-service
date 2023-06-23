@@ -93,6 +93,6 @@ public class SubjectMapper {
 
     private OpenMRSSaveObservation eventDateObs(Subject subject) {
         var bahmniValue = mappingService.getBahmniValue(bahmniMappingGroup.common, bahmniMappingType.avniEventDateConcept);
-        return OpenMRSSaveObservation.createPrimitiveObs(bahmniValue, FormatAndParseUtil.toISODateString(subject.getRegistrationDate()), ObsDataType.Date);
+        return OpenMRSSaveObservation.createPrimitiveObs(bahmniValue, FormatAndParseUtil.toISODateTimeString(subject.getRegistrationDate()), ObsDataType.DateTime);
     }
 }
