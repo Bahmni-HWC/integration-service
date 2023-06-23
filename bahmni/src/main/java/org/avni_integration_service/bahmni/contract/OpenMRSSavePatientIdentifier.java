@@ -8,16 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class OpenMRSSavePatientIdentifier {
     private String identifier;
     private String identifierType;
-    private String location;
     private boolean preferred;
 
     public OpenMRSSavePatientIdentifier() {
     }
 
-    public OpenMRSSavePatientIdentifier(String identifier, String identifierType, String location, boolean preferred) {
+    public OpenMRSSavePatientIdentifier(String identifier, String identifierType, boolean preferred) {
         this.identifier = identifier;
         this.identifierType = identifierType;
-        this.location = location;
         this.preferred = preferred;
     }
 
@@ -45,11 +43,4 @@ public class OpenMRSSavePatientIdentifier {
         this.identifierType = identifierType;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
 }

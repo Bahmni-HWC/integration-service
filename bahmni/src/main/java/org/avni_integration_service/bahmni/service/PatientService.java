@@ -19,6 +19,7 @@ import org.ict4h.atomfeed.client.domain.Event;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -123,12 +124,22 @@ public class PatientService {
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
         patient.setPerson(uuidHolder.getUuid());
-        patient.setIdentifiers(List.of(new OpenMRSSavePatientIdentifier(
+
+        List<OpenMRSSavePatientIdentifier> identifiers = new ArrayList<>();
+        identifiers.add(new OpenMRSSavePatientIdentifier(
                 String.format("%s%s", constants.getValue(ConstantKey.BahmniIdentifierPrefix.name()), subject.getId(metaData.avniIdentifierConcept())),
                 constants.getValue(ConstantKey.IntegrationBahmniIdentifierType.name()),
-                constants.getValue(ConstantKey.IntegrationBahmniLocation.name()),
                 true
-        )));
+        ));
+        identifiers.add(new OpenMRSSavePatientIdentifier(
+                subject.getObservation("RCH ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
+        ));
+        identifiers.add(new OpenMRSSavePatientIdentifier(
+                subject.getObservation("Nikshay ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
+        ));
+
+        patient.setIdentifiers(identifiers);
+
         return openMRSPatientRepository.createPatient(patient);
     }
 
