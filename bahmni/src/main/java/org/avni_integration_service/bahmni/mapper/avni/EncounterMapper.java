@@ -80,7 +80,7 @@ public class EncounterMapper {
 
     private OpenMRSSaveObservation eventDateObs(AvniBaseEncounter encounter) {
         var bahmniValue = mappingService.getBahmniValue(bahmniMappingGroup.common, bahmniMappingType.avniEventDateConcept);
-        return OpenMRSSaveObservation.createPrimitiveObs(bahmniValue, FormatAndParseUtil.toISODateTimeString(encounter.getEncounterDateTime()), ObsDataType.DateTime);
+        return OpenMRSSaveObservation.createPrimitiveObs(bahmniValue, FormatAndParseUtil.toISODateStringWithTimezone(encounter.getEncounterDateTime()), ObsDataType.DateTime);
     }
 
     public OpenMRSEncounter mapEncounterToExistingEncounter(OpenMRSFullEncounter existingOpenMRSEncounter, ProgramEncounter programEncounter, Constants constants) {

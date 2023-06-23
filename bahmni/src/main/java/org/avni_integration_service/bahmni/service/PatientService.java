@@ -53,7 +53,7 @@ public class PatientService {
         if (subject.getVoided())
             return null;
 
-        var visit = visitService.getOrCreateVisit(patient, subject);
+        var visit = visitService.getOrCreateVisit(patient, subject, subject.getRegistrationDate());
         OpenMRSEncounter encounter = subjectMapper.mapSubjectToEncounter(subject, patient.getUuid(), subjectToPatientMetaData.encounterTypeUuid(), constants, visit);
         OpenMRSFullEncounter savedEncounter = openMRSEncounterRepository.createEncounter(encounter);
 
