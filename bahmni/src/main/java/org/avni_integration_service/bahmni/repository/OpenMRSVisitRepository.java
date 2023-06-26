@@ -31,7 +31,7 @@ public class OpenMRSVisitRepository extends BaseOpenMRSRepository {
         filteredByVisitType.setResults(searchResults.getResults().stream()
                 .filter(visit -> (visit.getVisitType().getUuid().equals(visitTypeUuid) && isVisitForGivenDate(visit, date)))
                 .collect(Collectors.toList()));
-        return pickAndExpectOne(filteredByVisitType, String.format("%s-%s", patientUuid, locationUuid));
+        return filteredByVisitType.getResults().size()>0?filteredByVisitType.getResults().get(0):null;
     }
 
     public List<OpenMRSVisit> getVisits(String patientUuid, String locationUuid, String visitTypeUuid) {
@@ -59,8 +59,12 @@ public class OpenMRSVisitRepository extends BaseOpenMRSRepository {
 
     private boolean isVisitForGivenDate(OpenMRSVisit visit, Date date){
         Date visitStartDateTime = visit.getStartDatetime();
-        Date visitStopDateTime = visit.getStopDatetime();
-        return date.after(visitStartDateTime) && date.before(visitStopDateTime);
+        return date.after(visitStartDateTime) && date.before(FormatAndParseUtil.getEndOfDayDate(date));
+    }
+
+    public void updateVisitStopDateTime(String visitUuid, Date stopDate) {
+        String json = "{\"stopDatetime\": \"%s\"}".formatted(FormatAndParseUtil.toISODateStringWithTimezone(stopDate));
+        openMRSWebClient.post(getSingleResourcePath("visit",visitUuid), json);
     }
 
 }

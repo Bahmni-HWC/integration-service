@@ -1,5 +1,6 @@
 package org.avni_integration_service.bahmni.service;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.avni_integration_service.bahmni.BahmniMappingGroup;
 import org.avni_integration_service.bahmni.BahmniMappingType;
@@ -70,8 +71,8 @@ public class VisitService {
         openMRSSaveVisit.setLocation(location);
         openMRSSaveVisit.setVisitType(visitType);
         openMRSSaveVisit.setPatient(patient.getUuid());
-        openMRSSaveVisit.setStartDatetime(getVisitStartDateTimeString(date));
-        openMRSSaveVisit.setStopDatetime(getVisitStopDateTimeString(date));
+        openMRSSaveVisit.setStartDatetime(FormatAndParseUtil.toISODateStringWithTimezone(date));
+        openMRSSaveVisit.setStopDatetime(FormatAndParseUtil.toISODateStringWithTimezone(getVisitStopDateTime(date)));
         openMRSSaveVisit.setAttributes(visitAttributes);
         OpenMRSVisit visit = openMRSVisitRepository.createVisit(openMRSSaveVisit);
         logger.debug("Created new visit with uuid %s".formatted(visit.getUuid()));
@@ -83,8 +84,8 @@ public class VisitService {
         openMRSSaveVisit.setLocation(location);
         openMRSSaveVisit.setVisitType(visitType);
         openMRSSaveVisit.setPatient(patient.getUuid());
-        openMRSSaveVisit.setStartDatetime(getVisitStartDateTimeString(date));
-        openMRSSaveVisit.setStopDatetime(getVisitStopDateTimeString(date));
+        openMRSSaveVisit.setStartDatetime(FormatAndParseUtil.toISODateStringWithTimezone(date));
+        openMRSSaveVisit.setStopDatetime(FormatAndParseUtil.toISODateStringWithTimezone(getVisitStopDateTime(date)));
         OpenMRSVisit visit = openMRSVisitRepository.createVisit(openMRSSaveVisit);
         logger.debug("Created new visit with uuid %s".formatted(visit.getUuid()));
         return visit;
@@ -128,6 +129,7 @@ public class VisitService {
             return createVisit(patient, subject, date);
         }
         logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
+        openMRSVisitRepository.updateVisitStopDateTime(visit.getUuid(), getVisitStopDateTime(date));
         return visit;
     }
 
@@ -138,6 +140,7 @@ public class VisitService {
             String locationUuid = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniLocation.name());
             return createVisit(patient, locationUuid, visitTypeUuid, date);
         }
+        openMRSVisitRepository.updateVisitStopDateTime(visit.getUuid(), getVisitStopDateTime(date));
         logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
         return visit;
     }
@@ -168,21 +171,8 @@ public class VisitService {
         openMRSVisitRepository.deleteVisit(visit.getUuid());
     }
 
-    private String getVisitStartDateTimeString(Date date){
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        return FormatAndParseUtil.toISODateStringWithTimezone(calendar.getTime());
-    }
-
-    private String getVisitStopDateTimeString(Date date){
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY,23);
-        calendar.set(Calendar.MINUTE,59);
-        calendar.set(Calendar.SECOND,59);
-        return FormatAndParseUtil.toISODateStringWithTimezone(calendar.getTime());
+    private Date getVisitStopDateTime(Date date){
+        date = DateUtils.addMinutes(date, 1);
+        return date;
     }
 }
