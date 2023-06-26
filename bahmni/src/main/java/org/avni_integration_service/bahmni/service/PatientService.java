@@ -19,6 +19,7 @@ import org.ict4h.atomfeed.client.domain.Event;
 import org.javatuples.Pair;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -111,15 +112,39 @@ public class PatientService {
         personAddress.setStateProvince((String) subject.getLocation("State"));
 
         person.setAddresses(List.of(personAddress));
+
+        OpenMRSSavePersonAttributeType phoneNumberAttributeType = new OpenMRSSavePersonAttributeType("3a870d1d-4f0c-4348-8cab-84b0e265b4dd", "phoneNumber");
+        OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) subject.getObservation("Phone Number"));
+
+        OpenMRSSavePersonAttributeType fatherOrMotherNameAttributeType = new OpenMRSSavePersonAttributeType("021c8ef0-0c2a-11ee-be56-0242ac120002", "father/motherName");
+        OpenMRSSavePersonAttribute fatherOrMotherNameAttribute = new OpenMRSSavePersonAttribute(fatherOrMotherNameAttributeType, (String) subject.getObservation("Father/Mother's Name"));
+
+        person.setAttributes(List.of(phoneNumberAttribute, fatherOrMotherNameAttribute));
+
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
         patient.setPerson(uuidHolder.getUuid());
-        patient.setIdentifiers(List.of(new OpenMRSSavePatientIdentifier(
+
+        List<OpenMRSSavePatientIdentifier> identifiers = new ArrayList<>();
+        identifiers.add(new OpenMRSSavePatientIdentifier(
                 String.format("%s%s", constants.getValue(ConstantKey.BahmniIdentifierPrefix.name()), subject.getId(metaData.avniIdentifierConcept())),
                 constants.getValue(ConstantKey.IntegrationBahmniIdentifierType.name()),
-                constants.getValue(ConstantKey.IntegrationBahmniLocation.name()),
                 true
-        )));
+        ));
+
+        if (subject.getObservation("RCH ID") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("RCH ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
+            ));
+        }
+
+        if (subject.getObservation("Nikshay ID") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("Nikshay ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
+            ));
+        }
+        patient.setIdentifiers(identifiers);
+
         return openMRSPatientRepository.createPatient(patient);
     }
 

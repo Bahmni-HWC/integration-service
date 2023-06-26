@@ -1,22 +1,19 @@
 package org.avni_integration_service.bahmni.contract;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class OpenMRSSavePatientIdentifier {
+public class OpenMRSAdditionalPatientIdentifier {
     private String identifier;
-    private String identifierType;
     private boolean preferred;
+    private OpenMRSPatientIdentifierType identifierType;
 
-    public OpenMRSSavePatientIdentifier() {
+    public OpenMRSAdditionalPatientIdentifier() {
     }
 
-    public OpenMRSSavePatientIdentifier(String identifier, String identifierType, boolean preferred) {
+    public OpenMRSAdditionalPatientIdentifier(String identifier, boolean preferred, OpenMRSPatientIdentifierType identifierType) {
         this.identifier = identifier;
-        this.identifierType = identifierType;
-        this.preferred = preferred;
     }
 
     public String getIdentifier() {
@@ -35,12 +32,12 @@ public class OpenMRSSavePatientIdentifier {
         this.preferred = preferred;
     }
 
-    public String getIdentifierType() {
+    public OpenMRSPatientIdentifierType getIdentifierType() {
         return identifierType;
     }
 
-    public void setIdentifierType(String identifierType) {
+    public void setIdentifierType(OpenMRSPatientIdentifierType identifierType) {
         this.identifierType = identifierType;
     }
-
 }
+
