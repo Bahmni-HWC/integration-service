@@ -16,6 +16,9 @@ public class OpenMRSVisit {
     @JsonProperty("startDatetime")
     private String startDatetime;
 
+    @JsonProperty("stopDatetime")
+    private String stopDatetime;
+
     public String getUuid() {
         return uuid;
     }
@@ -46,5 +49,13 @@ public class OpenMRSVisit {
 
     public void setVisitType(OpenMRSUuidHolder visitType) {
         this.visitType = visitType;
+    }
+
+    public Date getStopDatetime() {
+        return FormatAndParseUtil.fromIsoDateString(stopDatetime);
+    }
+
+    public void setStopDatetime(String stopDatetime) {
+        this.stopDatetime = stopDatetime;
     }
 }

@@ -5,11 +5,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
+import java.util.TimeZone;
 
 public class FormatAndParseUtil {
-    private static final SimpleDateFormat humanReadableFormat = new SimpleDateFormat("dd-MM-yyyy");;
+    private static final SimpleDateFormat humanReadableFormat = new SimpleDateFormat("dd-MM-yyyy");
     private static final SimpleDateFormat isoDateWithTimezone = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
     private static final SimpleDateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -84,5 +86,20 @@ public class FormatAndParseUtil {
         return dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    public static String toUTCDateTimeString(Date date) {
+        DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        isoDateTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return String.format("%s%s", isoDateTimeFormat.format(date), "Z");
+    }
+
+    public static Date getEndOfDayDate(Date date){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY,23);
+        calendar.set(Calendar.MINUTE,59);
+        calendar.set(Calendar.SECOND,59);
+        return calendar.getTime();
     }
 }

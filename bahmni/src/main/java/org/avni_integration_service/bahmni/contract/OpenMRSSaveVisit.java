@@ -12,6 +12,7 @@ public class OpenMRSSaveVisit {
     private String visitType;
     private String location;
     private String startDatetime;
+    private String stopDatetime;
     private List<OpenMRSSaveVisitAttribute> attributes;
 
     public String getPatient() {
@@ -52,5 +53,13 @@ public class OpenMRSSaveVisit {
 
     public void setAttributes(List<OpenMRSSaveVisitAttribute> attributes) {
         this.attributes = attributes;
+    }
+
+    public String getStopDatetime() {
+        return stopDatetime;
+    }
+
+    public void setStopDatetime(String stopDatetime) {
+        this.stopDatetime = stopDatetime;
     }
 }
