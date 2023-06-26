@@ -47,7 +47,7 @@ public class AvniEncounterRepository extends BaseAvniRepository {
 
     public GeneralEncountersResponse getGeneralEncounters(@NonNull Date lastModifiedDateTime) {
         Map<String, String> queryParams = Map.of(
-                "lastModifiedDateTime", FormatAndParseUtil.toISODateTimeString(lastModifiedDateTime),
+                "lastModifiedDateTime", FormatAndParseUtil.toUTCDateTimeString(lastModifiedDateTime),
                 "size", "10");
         ResponseEntity<GeneralEncountersResponse> responseEntity = avniHttpClient.get("/api/encounters", queryParams, GeneralEncountersResponse.class);
         return responseEntity.getBody();
@@ -57,7 +57,7 @@ public class AvniEncounterRepository extends BaseAvniRepository {
     public GeneralEncountersResponse getGeneralEncounters(@NonNull  Date lastModifiedDateTime, @NonNull String encounterType) {
         Map<String, String> queryParams = Map.of(
                 "encounterType", encounterType,
-                "lastModifiedDateTime", FormatAndParseUtil.toISODateTimeString(lastModifiedDateTime),
+                "lastModifiedDateTime", FormatAndParseUtil.toUTCDateTimeString(lastModifiedDateTime),
                 "size", "10");
         ResponseEntity<GeneralEncountersResponse> responseEntity = avniHttpClient.get("/api/encounters", queryParams, GeneralEncountersResponse.class);
         return responseEntity.getBody();

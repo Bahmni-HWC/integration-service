@@ -7,9 +7,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
+import java.util.TimeZone;
 
 public class FormatAndParseUtil {
-    private static final SimpleDateFormat humanReadableFormat = new SimpleDateFormat("dd-MM-yyyy");;
+    private static final SimpleDateFormat humanReadableFormat = new SimpleDateFormat("dd-MM-yyyy");
     private static final SimpleDateFormat isoDateWithTimezone = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
     private static final SimpleDateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -84,5 +85,11 @@ public class FormatAndParseUtil {
         return dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    public static String toUTCDateTimeString(Date date) {
+        DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        isoDateTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return String.format("%s%s", isoDateTimeFormat.format(date), "Z");
     }
 }

@@ -27,7 +27,7 @@ public class AvniSubjectRepository extends BaseAvniRepository {
 
     public <T> T getSubjects(Date lastModifiedDateTime, String subjectType, String path,
                                         Class<T> responseType) {
-        String fromTime = FormatAndParseUtil.toISODateTimeString(lastModifiedDateTime);
+        String fromTime = FormatAndParseUtil.toUTCDateTimeString(lastModifiedDateTime);
         HashMap<String, String> queryParams = new HashMap<>(1);
         queryParams.put("lastModifiedDateTime", fromTime);
         queryParams.put("subjectType", subjectType);
@@ -38,7 +38,7 @@ public class AvniSubjectRepository extends BaseAvniRepository {
     }
 
     public Subject[] getSubjects(Date lastModifiedDateTime, String subjectType, HashMap<String, Object> concepts) {
-        String fromTime = FormatAndParseUtil.toISODateTimeString(lastModifiedDateTime);
+        String fromTime = FormatAndParseUtil.toUTCDateTimeString(lastModifiedDateTime);
         HashMap<String, String> queryParams = new HashMap<>();
         queryParams.put("lastModifiedDateTime", fromTime);
         queryParams.put("subjectType", subjectType);
