@@ -131,13 +131,18 @@ public class PatientService {
                 constants.getValue(ConstantKey.IntegrationBahmniIdentifierType.name()),
                 true
         ));
-        identifiers.add(new OpenMRSSavePatientIdentifier(
-                subject.getObservation("RCH ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
-        ));
-        identifiers.add(new OpenMRSSavePatientIdentifier(
-                subject.getObservation("Nikshay ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
-        ));
 
+        if (subject.getObservation("RCH ID") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("RCH ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
+            ));
+        }
+
+        if (subject.getObservation("Nikshay ID") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("Nikshay ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
+            ));
+        }
         patient.setIdentifiers(identifiers);
 
         return openMRSPatientRepository.createPatient(patient);

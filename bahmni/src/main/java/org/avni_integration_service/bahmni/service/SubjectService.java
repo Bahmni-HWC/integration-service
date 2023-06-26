@@ -138,23 +138,19 @@ public class SubjectService {
             subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier().replace(prefix, ""));
         }
 
-        // Set RCH ID
         List<OpenMRSPatientIdentifier> identifiers = patient.getIdentifiers();
         Optional<OpenMRSPatientIdentifier> rchIdentifier = patient.getIdentifiers().stream()
                 .filter(id -> id.getIdentifierType().getUuid().equals("3766473c-0c29-11ee-be56-0242ac120002"))
                 .findFirst();
         if (rchIdentifier.isPresent()) {
-            Long rchId = Long.parseLong(rchIdentifier.get().getIdentifier());
-            subject.addObservation("RCH ID", rchId);
+            subject.addObservation("RCH ID", identifiers.get(0).getIdentifier());
         }
 
-        // Set Nikshay ID
         Optional<OpenMRSPatientIdentifier> nikshayIdentifier = patient.getIdentifiers().stream()
                 .filter(id -> id.getIdentifierType().getUuid().equals("45bcdf58-0c29-11ee-be56-0242ac120002"))
                 .findFirst();
         if (nikshayIdentifier.isPresent()) {
-            Long nikshayId = Long.parseLong(nikshayIdentifier.get().getIdentifier());
-            subject.addObservation("Nikshay ID", nikshayId);
+            subject.addObservation("Nikshay ID", identifiers.get(1).getIdentifier());
         }
 
 
