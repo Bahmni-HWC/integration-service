@@ -46,26 +46,30 @@ public class OpenMRSPatientMapper {
 
     public LinkedHashMap<String, Object> mapToAvniObservations(OpenMRSPatient openMRSPatient, PatientToSubjectMetaData patientToSubjectMetaData, MappingMetaDataCollection conceptMetaData) {
         LinkedHashMap<String, Object> observations = new LinkedHashMap<>();
-        for (OpenMRSPersonAttribute openMRSPersonAttribute : openMRSPatient.getPerson().getAttributes()) {
-            String attributeTypeUuid = openMRSPersonAttribute.getAttributeType().getUuid();
-            MappingMetaData questionMapping = conceptMetaData.getMappingForBahmniValue(attributeTypeUuid);
-            Object attributeValue = openMRSPersonAttribute.getValue();
-            if (attributeValue == null)
-                continue;
 
-            if (attributeValue instanceof Map) {
-                Map<String, String> attributeValueMap = (Map<String, String>) attributeValue;
-                String attributeUuid = attributeValueMap.get("uuid");
-                MappingMetaData answerMapping = mappingMetaDataRepository.findByMappingGroupAndMappingTypeAndIntSystemValue( bahmniMappingGroup.observation, bahmniMappingType.concept, attributeUuid);
-                if (answerMapping == null) {
-                    throw new RuntimeException(String.format("Could not find concept mapped for OpenMRS concept: %s while finding answer to OpenMRS concept/person-attribute: %s which is Avni Concept %s", attributeUuid, attributeTypeUuid, questionMapping.getAvniValue()));
-                }
-                conceptMetaData.getMappingForBahmniValue(attributeUuid);
-                observations.put(questionMapping.getAvniValue(), answerMapping.getAvniValue());
-            } else {
-                observations.put(questionMapping.getAvniValue(), attributeValue);
-            }
-        }
+        // Commenting since Patient attributes are mapped as subject registration details
+
+//        for (OpenMRSPersonAttribute openMRSPersonAttribute : openMRSPatient.getPerson().getAttributes()) {
+//            String attributeTypeUuid = openMRSPersonAttribute.getAttributeType().getUuid();
+//            MappingMetaData questionMapping = conceptMetaData.getMappingForBahmniValue(attributeTypeUuid);
+//            Object attributeValue = openMRSPersonAttribute.getValue();
+//            if (attributeValue == null)
+//                continue;
+//
+//            if (attributeValue instanceof Map) {
+//                Map<String, String> attributeValueMap = (Map<String, String>) attributeValue;
+//                String attributeUuid = attributeValueMap.get("uuid");
+//                MappingMetaData answerMapping = mappingMetaDataRepository.findByMappingGroupAndMappingTypeAndIntSystemValue( bahmniMappingGroup.observation, bahmniMappingType.concept, attributeUuid);
+//                if (answerMapping == null) {
+//                    throw new RuntimeException(String.format("Could not find concept mapped for OpenMRS concept: %s while finding answer to OpenMRS concept/person-attribute: %s which is Avni Concept %s", attributeUuid, attributeTypeUuid, questionMapping.getAvniValue()));
+//                }
+//                conceptMetaData.getMappingForBahmniValue(attributeUuid);
+//                observations.put(questionMapping.getAvniValue(), answerMapping.getAvniValue());
+//            } else {
+//                observations.put(questionMapping.getAvniValue(), attributeValue);
+//            }
+//        }
+
         observations.put(patientToSubjectMetaData.bahmniEntityUuidConcept(), openMRSPatient.getUuid());
         return observations;
     }

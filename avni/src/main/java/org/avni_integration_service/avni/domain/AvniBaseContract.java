@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.avni_integration_service.util.FormatAndParseUtil;
+import org.avni_integration_service.util.MapUtil;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -13,6 +14,8 @@ import java.util.Map;
 public class AvniBaseContract implements ObservationHolder {
     private static final String ObservationsFieldName = "observations";
     public static final String LocationsFieldName = "location";
+    public static final String RCHIdFieldName = "RCH ID";
+    public static final String NikshayIdFieldName = "Nikshay ID";
 
     protected Map<String, Object> map = new HashMap<>();
 
@@ -84,6 +87,20 @@ public class AvniBaseContract implements ObservationHolder {
     public Object getObservation(String conceptName) {
         Map<String, Object> observations = getObservations();
         return observations.get(conceptName);
+    }
+
+    public void setRCHId(String rchId) {
+        map.put(RCHIdFieldName, rchId);
+    }
+    public String getRCHId() {
+        return MapUtil.getString(RCHIdFieldName, this.map);
+    }
+
+    public void setNikshayId(String nikshayId) {
+        map.put(NikshayIdFieldName, nikshayId);
+    }
+    public String getNikshayId() {
+        return MapUtil.getString(NikshayIdFieldName, this.map);
     }
 
     @Override
