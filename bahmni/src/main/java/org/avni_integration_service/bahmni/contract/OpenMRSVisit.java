@@ -13,6 +13,8 @@ public class OpenMRSVisit {
     private List<OpenMRSVisitAttribute> attributes;
     private OpenMRSUuidHolder visitType;
 
+    private OpenMRSUuidHolder location;
+
     @JsonProperty("startDatetime")
     private String startDatetime;
 
@@ -57,5 +59,13 @@ public class OpenMRSVisit {
 
     public void setStopDatetime(String stopDatetime) {
         this.stopDatetime = stopDatetime;
+    }
+
+    public OpenMRSUuidHolder getLocation() {
+        return location;
+    }
+
+    public void setLocation(OpenMRSUuidHolder location) {
+        this.location = location;
     }
 }

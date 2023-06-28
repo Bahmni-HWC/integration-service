@@ -37,9 +37,8 @@ public class VisitService {
         this.bahmniMappingType = bahmniMappingType;
     }
 
-    public OpenMRSVisit getVisitForPatientByDate(String patientUuid, Date date) {
+    public OpenMRSVisit getVisitForPatientByDate(String patientUuid, String locationUuid, Date date) {
         Constants allConstants = constantsRepository.findAllConstants();
-        String locationUuid = allConstants.getValue(ConstantKey.IntegrationBahmniLocation.name());
         String visitTypeUuid = allConstants.getValue(ConstantKey.IntegrationBahmniVisitType.name());
         return openMRSVisitRepository.getVisit(patientUuid, locationUuid, visitTypeUuid, date);
     }
@@ -55,7 +54,7 @@ public class VisitService {
     }
 
     private OpenMRSVisit createVisit(OpenMRSPatient patient, Subject subject, Date date) {
-        String location = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniLocation.name());
+        String location = mappingService.getBahmniLocationUUIDforCatchment(subject.getCatchments().get(0));
         String visitType = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniVisitType.name());
         return createVisit(patient, location, visitType, visitAttributes(subject), date);
     }
@@ -74,18 +73,6 @@ public class VisitService {
         openMRSSaveVisit.setStartDatetime(FormatAndParseUtil.toISODateStringWithTimezone(date));
         openMRSSaveVisit.setStopDatetime(FormatAndParseUtil.toISODateStringWithTimezone(getVisitStopDateTime(date)));
         openMRSSaveVisit.setAttributes(visitAttributes);
-        OpenMRSVisit visit = openMRSVisitRepository.createVisit(openMRSSaveVisit);
-        logger.debug("Created new visit with uuid %s".formatted(visit.getUuid()));
-        return visit;
-    }
-
-    private OpenMRSVisit createVisit(OpenMRSPatient patient, String location, String visitType, Date date) {
-        OpenMRSSaveVisit openMRSSaveVisit = new OpenMRSSaveVisit();
-        openMRSSaveVisit.setLocation(location);
-        openMRSSaveVisit.setVisitType(visitType);
-        openMRSSaveVisit.setPatient(patient.getUuid());
-        openMRSSaveVisit.setStartDatetime(FormatAndParseUtil.toISODateStringWithTimezone(date));
-        openMRSSaveVisit.setStopDatetime(FormatAndParseUtil.toISODateStringWithTimezone(getVisitStopDateTime(date)));
         OpenMRSVisit visit = openMRSVisitRepository.createVisit(openMRSSaveVisit);
         logger.debug("Created new visit with uuid %s".formatted(visit.getUuid()));
         return visit;
@@ -124,24 +111,13 @@ public class VisitService {
     }
 
     public OpenMRSVisit getOrCreateVisit(OpenMRSPatient patient, Subject subject, Date date) {
-        var visit = getVisitForPatientByDate(patient.getUuid(), date);
+        String locationUuid = mappingService.getBahmniLocationUUIDforCatchment(subject.getCatchments().get(0));
+        var visit = getVisitForPatientByDate(patient.getUuid(),locationUuid ,date);
         if (visit == null) {
             return createVisit(patient, subject, date);
         }
         logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
         openMRSVisitRepository.updateVisitStopDateTime(visit.getUuid(), getVisitStopDateTime(date));
-        return visit;
-    }
-
-    public OpenMRSVisit getOrCreateVisit(OpenMRSPatient patient, Date date) {
-        var visit = getVisitForPatientByDate(patient.getUuid(),date);
-        if (visit == null) {
-            String visitTypeUuid = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniVisitType.name());
-            String locationUuid = constantsRepository.findAllConstants().getValue(ConstantKey.IntegrationBahmniLocation.name());
-            return createVisit(patient, locationUuid, visitTypeUuid, date);
-        }
-        openMRSVisitRepository.updateVisitStopDateTime(visit.getUuid(), getVisitStopDateTime(date));
-        logger.debug("Retrieved existing visit with uuid %s".formatted(visit.getUuid()));
         return visit;
     }
 
