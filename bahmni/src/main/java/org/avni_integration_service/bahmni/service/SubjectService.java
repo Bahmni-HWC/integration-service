@@ -155,9 +155,7 @@ public class SubjectService {
         }
 
         String phoneNumber = patient.getPerson().getAttributes().getPhoneNumber();
-        if (phoneNumber != null && phoneNumber.startsWith("+91")) {
-            phoneNumber = phoneNumber.substring(3);
-        }
+
         subject.addObservation("Phone Number", phoneNumber);
 
         subject.addObservation("Father/Mother's Name", patient.getPerson().getAttributes().getFatherOrMotherName());
