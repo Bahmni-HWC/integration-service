@@ -141,13 +141,18 @@ public class SubjectService {
         Optional<OpenMRSPatientIdentifier> rchIdentifier = patient.getIdentifiers().stream()
                 .filter(id -> id.getIdentifierType().getUuid().equals("3766473c-0c29-11ee-be56-0242ac120002"))
                 .findFirst();
-        rchIdentifier.ifPresent(identifiers -> subject.addObservation("RCH ID", identifier.get().getIdentifier()));
+
+        if (rchIdentifier.isPresent()) {
+            subject.addObservation("RCH ID", rchIdentifier.get().getIdentifier());
+        }
 
         Optional<OpenMRSPatientIdentifier> nikshayIdentifier = patient.getIdentifiers().stream()
                 .filter(id -> id.getIdentifierType().getUuid().equals("45bcdf58-0c29-11ee-be56-0242ac120002"))
                 .findFirst();
-        nikshayIdentifier.ifPresent(identifiers -> subject.addObservation("Nikshay ID", identifier.get().getIdentifier()));
 
+        if (nikshayIdentifier.isPresent()) {
+            subject.addObservation("Nikshay ID", nikshayIdentifier.get().getIdentifier());
+        }
 
         String phoneNumber = patient.getPerson().getAttributes().getPhoneNumber();
         if (phoneNumber != null && phoneNumber.startsWith("+91")) {
