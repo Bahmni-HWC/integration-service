@@ -40,7 +40,7 @@ public class MappingMetaDataService {
                 bahmniMappingType.labEncounterType};
     }
 
-    
+
     public SubjectToPatientMetaData getForSubjectToPatient() {
         MappingMetaData patientIdentifierMapping = mappingService.findByMappingGroupAndMappingType(bahmniMappingGroup.patientSubject, bahmniMappingType.patientIdentifierConcept);
         String avniIdentifierConcept = patientIdentifierMapping.getAvniValue();
@@ -80,5 +80,9 @@ public class MappingMetaDataService {
 
     public boolean isBahmniEncounterInAvni(String encounterType) {
         return mappingMetaDataRepository.findAllByMappingTypeInAndAvniValue(Arrays.asList(bahmniEncounterMappingTypes), encounterType).size() != 0;
+    }
+
+    public boolean isBahmniEncounterMappingDefined(String encounterType) {
+        return mappingService.getBahmniFormUuidForGeneralEncounter(encounterType) != null;
     }
 }

@@ -96,6 +96,12 @@ public class GeneralEncounterWorker implements ErrorRecordWorker {
             return;
         }
 
+        if(!mappingMetaDataService.isBahmniEncounterMappingDefined(generalEncounter.getEncounterType())){
+            logger.debug(String.format("Skipping Avni general encounter of type %s because it is not mapped to Bahmni", generalEncounter.getEncounterType()));
+            updateSyncStatus(generalEncounter, updateSyncStatus);
+            return;
+        }
+
         if (avniBahmniErrorService.hasAvniMultipleSubjectsError(generalEncounter.getSubjectId())) {
             logger.error(String.format("Skipping Avni general encounter %s because of multiple subjects with same id error", generalEncounter.getUuid()));
             avniBahmniErrorService.errorOccurred(generalEncounter, BahmniErrorType.MultipleSubjectsWithId);
