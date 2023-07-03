@@ -86,7 +86,7 @@ public class PatientService {
     }
 
     public OpenMRSPatient findPatient(Subject subject, Constants constants, SubjectToPatientMetaData subjectToPatientMetaData) {
-        String patientIdentifier = constants.getValue(ConstantKey.BahmniIdentifierPrefix.name()) + subject.getId(subjectToPatientMetaData.avniIdentifierConcept());
+        String patientIdentifier =  subject.getId(subjectToPatientMetaData.avniIdentifierConcept());
         return openMRSPatientRepository.getPatientByIdentifier(patientIdentifier);
     }
 
@@ -127,7 +127,7 @@ public class PatientService {
 
         List<OpenMRSSavePatientIdentifier> identifiers = new ArrayList<>();
         identifiers.add(new OpenMRSSavePatientIdentifier(
-                String.format("%s%s", constants.getValue(ConstantKey.BahmniIdentifierPrefix.name()), subject.getId(metaData.avniIdentifierConcept())),
+                subject.getId(metaData.avniIdentifierConcept()),
                 constants.getValue(ConstantKey.IntegrationBahmniIdentifierType.name()),
                 true
         ));

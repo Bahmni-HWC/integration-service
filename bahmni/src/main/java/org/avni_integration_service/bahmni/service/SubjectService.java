@@ -46,7 +46,7 @@ public class SubjectService {
         String identifier = openMRSPatient.getPatientId();
         LinkedHashMap<String, Object> subjectCriteria = new LinkedHashMap<>();
         String prefix = constants.getValue(ConstantKey.BahmniIdentifierPrefix.name());
-        subjectCriteria.put(patientToSubjectMetaData.avniIdentifierConcept(), identifier.replace(prefix, ""));
+        subjectCriteria.put(patientToSubjectMetaData.avniIdentifierConcept(),identifier);
         return avniSubjectRepository.getSubject(
                 new GregorianCalendar(1900, Calendar.JANUARY, 1).getTime(),
                 constants.getValue(ConstantKey.IntegrationAvniSubjectType.name()),
@@ -135,7 +135,7 @@ public class SubjectService {
         subject.setExternalId(patient.getUuid());
         if (identifier.isPresent()) {
             String prefix = constants.getValue(ConstantKey.BahmniIdentifierPrefix.name());
-            subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier().replace(prefix, ""));
+            subject.addObservation(metaData.avniIdentifierConcept(), identifier.get().getIdentifier());
         }
 
         Optional<OpenMRSPatientIdentifier> rchIdentifier = patient.getIdentifiers().stream()
