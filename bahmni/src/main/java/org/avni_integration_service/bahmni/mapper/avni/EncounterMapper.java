@@ -53,7 +53,7 @@ public class EncounterMapper {
         openMRSEncounter.setPatient(patientUuid);
         openMRSEncounter.setEncounterType(encounterTypeUuid);
         openMRSEncounter.setEncounterDatetime(MapperUtils.getEventDateTime(baseEncounter.getEncounterDateTime(), visit));
-        openMRSEncounter.setLocation(constants.getValue(ConstantKey.IntegrationBahmniLocation.name()));
+        openMRSEncounter.setLocation(visit.getLocation().getUuid());
         openMRSEncounter.addEncounterProvider(new OpenMRSEncounterProvider(mappingService.getProviderUUIDForAvniUser(baseEncounter.getLastModifiedBy(), constants),
                 constants.getValue(ConstantKey.IntegrationBahmniEncounterRole.name())));
 
@@ -105,7 +105,7 @@ public class EncounterMapper {
         openMRSEncounter.setEncounterDatetime(existingEncounter.getEncounterDatetime());
         openMRSEncounter.setPatient(existingEncounter.getPatient().getUuid());
         openMRSEncounter.setEncounterType(encounterTypeUuid);
-        openMRSEncounter.setLocation(constants.getValue(ConstantKey.IntegrationBahmniLocation.name()));
+        openMRSEncounter.setLocation(existingEncounter.getLocation().getUuid());
         openMRSEncounter.addEncounterProvider(new OpenMRSEncounterProvider(mappingService.getProviderUUIDForAvniUser(avniBaseEncounter.getLastModifiedBy(),constants), constants.getValue(ConstantKey.IntegrationBahmniEncounterRole.name())));
 
         String avniUuidConcept = mappingService.getBahmniValueForAvniIdConcept();

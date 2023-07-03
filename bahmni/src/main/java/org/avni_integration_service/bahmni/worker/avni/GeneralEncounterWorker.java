@@ -129,7 +129,7 @@ public class GeneralEncounterWorker implements ErrorRecordWorker {
         var encounter = patientEncounter.getValue1();
 
         if (patient != null && encounter == null) {
-            encounterService.createCommunityEncounter(generalEncounter, patient, constants);
+            encounterService.createCommunityEncounter(generalEncounter, patient, constants, subject);
         } else if (patient != null && encounter != null) {
             encounterService.updateCommunityEncounter(encounter, generalEncounter, constants);
         } else if (patient == null && encounter == null) {

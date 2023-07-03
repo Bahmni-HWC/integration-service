@@ -5,6 +5,7 @@ import org.avni_integration_service.util.FormatAndParseUtil;
 import org.avni_integration_service.util.MapUtil;
 
 import java.util.Date;
+import java.util.List;
 
 public class Subject extends AvniBaseContract {
     public static final String SubjectTypeFieldName = "Subject type";
@@ -17,6 +18,8 @@ public class Subject extends AvniBaseContract {
     public static final String DobFieldName = "Date of birth";
 
     public static final String RegistrationDateFieldName = "Registration date";
+
+    public static final String CatchmentsFieldName = "Catchments";
 
     public String getId(String avniIdentifierConcept) {
         return (String) getObservation(avniIdentifierConcept);
@@ -107,5 +110,14 @@ public class Subject extends AvniBaseContract {
     @JsonIgnore
     public String getAddress() {
         return MapUtil.getString(AddressFieldName, this.map);
+    }
+
+    public void setCatchments(List<String> catchments) {
+        map.put(CatchmentsFieldName, catchments);
+    }
+
+    public List<String> getCatchments(){
+        Object catchments = map.get(CatchmentsFieldName);
+        return catchments == null ? null : (List<String>) catchments;
     }
 }

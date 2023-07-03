@@ -107,4 +107,10 @@ public class MappingService {
             providerUuid = constants.getValue(ConstantKey.IntegrationBahmniProvider.name());
         return providerUuid;
     }
+
+    public String getBahmniLocationUUIDforCatchment(String catchment) {
+        String locationUUID = getBahmniValue(bahmniMappingGroup.common, bahmniMappingType.avniCatchmentBahmniLocation, catchment);
+        if(locationUUID == null) throw new RuntimeException("No location mapping found for catchment: " + catchment);
+        return locationUUID;
+    }
 }

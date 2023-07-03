@@ -36,6 +36,7 @@ public class BahmniMappingType {
     public final MappingType avniUUIDVisitAttributeType;
     public final MappingType concept;
     public final MappingType providerUUID;
+    public final MappingType avniCatchmentBahmniLocation;
 
     @Autowired
     public BahmniMappingType(MappingTypeRepository mappingTypeRepository) {
@@ -65,5 +66,6 @@ public class BahmniMappingType {
         this.avniUUIDVisitAttributeType = mappingTypeRepository.findByName("AvniUUID_VisitAttributeType");
         this.concept = mappingTypeRepository.findByName("Concept");
         this.providerUUID = mappingTypeRepository.findByName("ProviderUUID");
+        this.avniCatchmentBahmniLocation = mappingTypeRepository.findByName("AvniCatchment_BahmniLocation");
     }
 }

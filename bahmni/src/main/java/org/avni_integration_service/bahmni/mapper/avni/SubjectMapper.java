@@ -33,7 +33,7 @@ public class SubjectMapper {
         var openMRSEncounter = new OpenMRSEncounter();
         openMRSEncounter.setPatient(patientUuid);
         openMRSEncounter.setEncounterType(encounterTypeUuid);
-        openMRSEncounter.setLocation(constants.getValue(ConstantKey.IntegrationBahmniLocation.name()));
+        openMRSEncounter.setLocation(visit.getLocation().getUuid());
 
         var encounterProvider = new OpenMRSEncounterProvider(mappingService.getProviderUUIDForAvniUser(subject.getLastModifiedBy(),constants),
                 constants.getValue(ConstantKey.IntegrationBahmniEncounterRole.name()));
@@ -56,7 +56,7 @@ public class SubjectMapper {
         openMRSEncounter.setEncounterDatetime(existingEncounter.getEncounterDatetime());
         openMRSEncounter.setPatient(existingEncounter.getPatient().getUuid());
         openMRSEncounter.setEncounterType(encounterTypeUuid);
-        openMRSEncounter.setLocation(constants.getValue(ConstantKey.IntegrationBahmniLocation.name()));
+        openMRSEncounter.setLocation(existingEncounter.getLocation().getUuid());
         openMRSEncounter.addEncounterProvider(new OpenMRSEncounterProvider(mappingService.getProviderUUIDForAvniUser(subject.getLastModifiedBy(),constants), constants.getValue(ConstantKey.IntegrationBahmniEncounterRole.name())));
 
         var observations = observationMapper.updateOpenMRSObservationsFromAvniObservations(

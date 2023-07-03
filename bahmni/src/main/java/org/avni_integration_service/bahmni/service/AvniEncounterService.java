@@ -2,6 +2,7 @@ package org.avni_integration_service.bahmni.service;
 
 import org.apache.log4j.Logger;
 import org.avni_integration_service.avni.domain.GeneralEncounter;
+import org.avni_integration_service.avni.domain.Subject;
 import org.avni_integration_service.avni.repository.AvniEncounterRepository;
 import org.avni_integration_service.bahmni.BahmniEncounterToAvniEncounterMetaData;
 import org.avni_integration_service.bahmni.BahmniErrorType;
@@ -104,12 +105,12 @@ public class AvniEncounterService extends BaseAvniEncounterService {
         return !generalEncounter.isCompleted();
     }
 
-    public OpenMRSFullEncounter createCommunityEncounter(GeneralEncounter generalEncounter, OpenMRSPatient patient, Constants constants) {
+    public OpenMRSFullEncounter createCommunityEncounter(GeneralEncounter generalEncounter, OpenMRSPatient patient, Constants constants, Subject subject) {
         if (generalEncounter.getVoided()) {
             logger.debug(String.format("Skipping voided Avni encounter %s", generalEncounter.getUuid()));
             return null;
         }
-        var visit = visitService.getOrCreateVisit(patient, generalEncounter.getEncounterDateTime());
+        var visit = visitService.getOrCreateVisit(patient, subject ,generalEncounter.getEncounterDateTime());
         logger.debug(String.format("Creating new Bahmni Encounter for Avni general encounter %s", generalEncounter.getUuid()));
         var openMRSEncounter = encounterMapper.mapEncounter(generalEncounter, patient.getUuid(), constants, visit);
         var savedEncounter = openMRSEncounterRepository.createEncounter(openMRSEncounter);
