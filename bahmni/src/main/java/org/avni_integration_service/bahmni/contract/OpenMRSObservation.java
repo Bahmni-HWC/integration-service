@@ -3,6 +3,7 @@ package org.avni_integration_service.bahmni.contract;
 public class OpenMRSObservation {
     private String conceptUuid;
     private Object value;
+    private Object valueComplex;
     private String obsUuid;
     private boolean voided;
 
@@ -44,5 +45,13 @@ public class OpenMRSObservation {
 
     public boolean isVoided() {
         return voided;
+    }
+
+    public Object getValueComplex() {
+        return valueComplex;
+    }
+
+    public void setValueComplex(Object valueComplex) {
+        this.valueComplex = valueComplex;
     }
 }

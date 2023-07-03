@@ -8,6 +8,7 @@ import org.avni_integration_service.bahmni.contract.OpenMRSSaveObservation;
 import org.avni_integration_service.bahmni.repository.intmapping.MappingService;
 import org.avni_integration_service.integration_data.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -20,6 +21,10 @@ public class ObservationMapper {
     private final BahmniMappingGroup bahmniMappingGroup;
 
     private final BahmniMappingType bahmniMappingType;
+
+    @Value("${bahmni.mapping.complex.concepts}")
+    private String complexConcepts;
+
     @Autowired
     public ObservationMapper(MappingService mappingService, BahmniMappingGroup bahmniMappingGroup, BahmniMappingType bahmniMappingType) {
         this.mappingService = mappingService;
@@ -61,11 +66,19 @@ public class ObservationMapper {
                 if (questionMapping.isCoded()) {
                     if (answer instanceof String) {
                         var avniAnswer = (String) answer;
-                        updatedObservations.add(updatedCodedObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                        if (isComplexConcept(questionMapping.getIntSystemValue())) {
+                            updatedObservations.add(updatedComplexObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                        } else {
+                            updatedObservations.add(updatedCodedObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                        }
                     } else if (answer instanceof List<?>) {
                         List<String> valueList = (List<String>) answer;
                         valueList.forEach(avniAnswer -> {
-                            updatedObservations.add(updatedCodedObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                            if (isComplexConcept(questionMapping.getIntSystemValue())) {
+                                updatedObservations.add(updatedComplexObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                            } else {
+                                updatedObservations.add(updatedCodedObs(openMRSObservations, conceptMappings, question, questionMapping, avniAnswer));
+                            }
                         });
                     }
                 } else {
@@ -96,13 +109,27 @@ public class ObservationMapper {
         MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(avniAnswerConcept);
         OpenMRSObservation openMRSObservation = openMRSObservations.stream()
                 .filter(o -> o.getConceptUuid().equals(conceptMappings.getBahmniValueForAvniValue(question)) &&
-                             o.getValue().equals(conceptMappings.getBahmniValueForAvniValue(avniAnswerConcept)))
+                        o.getValue().equals(conceptMappings.getBahmniValueForAvniValue(avniAnswerConcept)))
                 .findFirst()
                 .orElse(null);
         if (openMRSObservation != null) {
             return (OpenMRSSaveObservation.createCodedObs(openMRSObservation.getObsUuid(), questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
         } else {
             return (OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+        }
+    }
+
+    private OpenMRSSaveObservation updatedComplexObs(List<OpenMRSObservation> openMRSObservations, MappingMetaDataCollection conceptMappings, String question, MappingMetaData questionMapping, String avniAnswerConcept) {
+        MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(avniAnswerConcept);
+        OpenMRSObservation openMRSObservation = openMRSObservations.stream()
+                .filter(o -> o.getConceptUuid().equals(conceptMappings.getBahmniValueForAvniValue(question)) &&
+                        o.getValueComplex().equals(conceptMappings.getBahmniValueForAvniValue(avniAnswerConcept)))
+                .findFirst()
+                .orElse(null);
+        if (openMRSObservation != null) {
+            return (OpenMRSSaveObservation.createComplexObs(openMRSObservation.getObsUuid(), questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+        } else {
+            return (OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
         }
     }
 
@@ -116,15 +143,14 @@ public class ObservationMapper {
             if (avniObsValue == null) {
                 voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
             } else if (questionMapping.isCoded()) {
+                String openMRSAnswerName = isComplexConcept(openMRSObservation.getConceptUuid()) ? conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValueComplex()) : conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValue());
                 if (avniObsValue instanceof List<?>) {
                     List<String> avniObsValueList = (List<String>) avniObsValue;
-                    String openMRSAnswerName = conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValue());
                     if (!avniObsValueList.contains(openMRSAnswerName)) {
                         voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
                     }
                 } else if (avniObsValue instanceof String) {
                     String avniObsValueString = (String) avniObsValue;
-                    String openMRSAnswerName = conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValue());
                     if (!avniObsValueString.equals(openMRSAnswerName)) {
                         voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
                     }
@@ -145,16 +171,24 @@ public class ObservationMapper {
                 if (questionMapping.isCoded()) {
                     if (value instanceof String) {
                         MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue((String) value);
-                        openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                        if (isComplexConcept(questionMapping.getIntSystemValue())) {
+                            openMRSObservations.add(OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                        } else {
+                            openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                        }
                     } else if (value instanceof List<?>) {
                         List<String> valueList = (List<String>) value;
                         valueList.forEach(s -> {
                             MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(s);
-                            openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                            if (isComplexConcept(questionMapping.getIntSystemValue())) {
+                                openMRSObservations.add(OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                            } else {
+                                openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                            }
                         });
                     }
                 } else {
-                    if (questionMapping.isText() && value instanceof String && ((String)value).isBlank()) {
+                    if (questionMapping.isText() && value instanceof String && ((String) value).isBlank()) {
                         continue;
                     }
                     openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObs(questionMapping.getIntSystemValue(), value, questionMapping.getDataTypeHint()));
@@ -162,6 +196,15 @@ public class ObservationMapper {
             }
         }
         return openMRSObservations;
+    }
+
+    private boolean isComplexConcept(String conceptUUID) {
+        if (complexConcepts == null) {
+            return false;
+        }
+        List<String> complexConceptUUIDs = Arrays.asList(complexConcepts.split(","));
+        return complexConceptUUIDs.contains(conceptUUID);
+
     }
 
 }

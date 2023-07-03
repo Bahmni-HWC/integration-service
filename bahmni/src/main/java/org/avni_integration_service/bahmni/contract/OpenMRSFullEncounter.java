@@ -93,14 +93,20 @@ public class OpenMRSFullEncounter {
     private OpenMRSObservation getOpenMRSObservation(Map<String, Object> observation) {
         OpenMRSObservation openMRSObservation = new OpenMRSObservation();
         Map<String, Object> conceptNode = (Map<String, Object>) observation.get("concept");
-        openMRSObservation.setConceptUuid((String) conceptNode.get("uuid"));
+        String conceptUuid = (String) conceptNode.get("uuid");
+        openMRSObservation.setConceptUuid(conceptUuid);
         openMRSObservation.setObsUuid((String) observation.get("uuid"));
-
-        Object value = observation.get("value");
-        if (value instanceof Map) {
-            value = ((Map) value).get("uuid");
+        if(isComplexObs(observation))
+        {
+            openMRSObservation.setValueComplex(getValueforComplexObs(observation));
         }
-        openMRSObservation.setValue(value);
+        else {
+            Object value = observation.get("value");
+            if (value instanceof Map) {
+                value = ((Map) value).get("uuid");
+            }
+            openMRSObservation.setValue(value);
+        }
         openMRSObservation.setVoided((Boolean) observation.get("voided"));
         return openMRSObservation;
     }
@@ -176,5 +182,16 @@ public class OpenMRSFullEncounter {
         OpenMRSObservation obs = leafObservations.stream().filter(openMRSObservation -> openMRSObservation.getConceptUuid().equals(conceptUuid)).findFirst().orElse(null);
         if (obs == null) return null;
         return obs.getValue();
+    }
+
+    //TODO: This should be handled in a better way by getting and validating against /bahmnicore/observations API
+    private boolean isComplexObs(Map<String, Object> observation) {
+        Object obsValue = observation.get("value");
+        return obsValue instanceof Map  && ((Map) obsValue).get("display").toString().equals("raw file");
+    }
+
+    private String getValueforComplexObs(Map<String, Object> observation){
+        String displayField = (String) observation.get("display");
+        return displayField.split(":")[1].trim();
     }
 }
