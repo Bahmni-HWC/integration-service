@@ -13,6 +13,7 @@ public class OpenMRSSaveObservation {
     private String concept;
     private String obsDatetime;
     private Object value;
+    private Object valueComplex;
     private String valueCodedName;
     private String uuid;
     private boolean voided;
@@ -62,6 +63,21 @@ public class OpenMRSSaveObservation {
         openMRSSaveObservation.uuid = obsUuid;
         openMRSSaveObservation.concept = concept;
         openMRSSaveObservation.value = valueUuid;
+        return openMRSSaveObservation;
+    }
+
+    public static OpenMRSSaveObservation createComplexObs(String concept, String valueComplex){
+        OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
+        openMRSSaveObservation.concept = concept;
+        openMRSSaveObservation.valueComplex = valueComplex;
+        return openMRSSaveObservation;
+    }
+
+    public static OpenMRSSaveObservation createComplexObs(String obsUuid, String concept, String valueComplex){
+        OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
+        openMRSSaveObservation.uuid = obsUuid;
+        openMRSSaveObservation.concept = concept;
+        openMRSSaveObservation.valueComplex = valueComplex;
         return openMRSSaveObservation;
     }
 
@@ -119,5 +135,13 @@ public class OpenMRSSaveObservation {
 
     public void setGroupMembers(List<OpenMRSSaveObservation> groupMembers) {
         this.groupMembers = groupMembers;
+    }
+
+    public Object getValueComplex() {
+        return valueComplex;
+    }
+
+    public void setValueComplex(Object valueComplex) {
+        this.valueComplex = valueComplex;
     }
 }
