@@ -159,10 +159,12 @@ public class SubjectService {
         subject.addObservation("Phone Number", phoneNumber);
 
         subject.addObservation("Father/Mother's Name", patient.getPerson().getAttributes().getFatherOrMotherName());
+       Subject createdSubject = avniSubjectRepository.create(subject);
+        createRegistrationEncounter(patient, createdSubject, metaData);
 
 //        subject.setVoided(MapUtil.getBoolean(DemandIsVoidedField, response));
 //        String[] arrayOfTCs = MapUtil.getString(DemandTargetCommunity, response) != null ? MapUtil.getString(DemandTargetCommunity, response).split(";") : null;
 //        subject.addObservation("Target Community", arrayOfTCs);
-        return avniSubjectRepository.create(subject);
+        return createdSubject;
     }
 }
