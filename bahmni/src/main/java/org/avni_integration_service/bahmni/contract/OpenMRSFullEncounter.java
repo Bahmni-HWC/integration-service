@@ -3,6 +3,7 @@ package org.avni_integration_service.bahmni.contract;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.avni_integration_service.util.FormatAndParseUtil;
+import org.avni_integration_service.util.ObjectJsonMapper;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -159,8 +160,23 @@ public class OpenMRSFullEncounter {
 
             return asNeeded ?
                     String.format("%s %s - as needed - starting %s", drug.get("display"), doseUnits.get("display"), humanReadableDate) :
-                    String.format("%s %s - %s for %d days - starting %s", drug.get("display"), doseUnits.get("display"), dose, duration, humanReadableDate);
+                    String.format("%s - %s for %d days - starting %s", drug.get("display"), getDosingInstruction(stringObjectMap), duration, humanReadableDate);
         }).collect(Collectors.toList());
+    }
+
+    private String getDosingInstruction(Map<String, Object> drugOrder){
+        Map<String, Object> doseUnits = (Map<String, Object>) drugOrder.get("doseUnits");
+        String dose = drugOrder.get("dose") == null ? "" : doseFormat.format(drugOrder.get("dose"));
+        if(drugOrder.get("frequency") != null){
+            Map<String, Object> frequency = (Map<String, Object>) drugOrder.get("frequency");
+            return String.format("%s %s  %s", dose, doseUnits.get("display"), frequency.get("display"));
+        }
+        else{
+            Map<String, Object> dosingInstructions = ObjectJsonMapper.readValue((String) drugOrder.get("dosingInstructions"),Map.class);
+            return String.format("%s-%s-%s %s", dosingInstructions.get("morningDose"), dosingInstructions.get("afternoonDose"), dosingInstructions.get("eveningDose"), doseUnits.get("display"));
+        }
+
+
     }
 
     public String getVisitTypeUuid() {
