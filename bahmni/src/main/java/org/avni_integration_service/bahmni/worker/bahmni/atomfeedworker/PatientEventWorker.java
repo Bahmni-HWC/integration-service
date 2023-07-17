@@ -93,6 +93,7 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
             subjectService.createRegistrationEncounter(patient, subject, metaData);
         } else if (patientEncounter == null && subject == null) {
             if (!isKnownPatientLocation(patient)) {
+                logger.error("Can not sync patients to Avni. Patient Address mapping is not found");
                 return;
             }
             Subject avniSubject = subjectService.createSubjectFromPatient(patient, constants, metaData);
@@ -111,11 +112,11 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
 
         List<String> knownSubDistrictList = Arrays.asList(knownSubDistricts.split(","));
         List<String> knownVillageList = Arrays.asList(knownVillages.split(","));
-        if (!knownSubDistrictList.contains(subDistrict.toUpperCase().trim())) {
+        if (subDistrict == null || !knownSubDistrictList.contains(subDistrict.toUpperCase().trim())) {
             return false;
         }
 
-        if (!knownVillageList.contains(village.toUpperCase().trim())) {
+        if (village == null || !knownVillageList.contains(village.toUpperCase().trim())) {
             return false;
         }
 
