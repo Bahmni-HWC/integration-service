@@ -37,6 +37,13 @@ public class OpenMRSSaveObservation {
         return openMRSSaveObservation;
     }
 
+    public static OpenMRSSaveObservation createPrimitiveObsForQuestionGroup(String concept, List<OpenMRSSaveObservation> groupMembers ) {
+        OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
+        openMRSSaveObservation.concept = concept;
+        openMRSSaveObservation.groupMembers = groupMembers;
+        return openMRSSaveObservation;
+    }
+
     public static OpenMRSSaveObservation createPrimitiveObs(String obsUuid, String concept, Object value, ObsDataType dataType) {
         OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
         openMRSSaveObservation.uuid = obsUuid;

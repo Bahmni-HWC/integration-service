@@ -81,7 +81,7 @@ public class ObservationMapper {
                             }
                         });
                     }
-                } else {
+                                        } else {
                     if (questionMapping.isText() && answer instanceof String && ((String) answer).isBlank()) {
                         continue;
                     }
@@ -176,7 +176,8 @@ public class ObservationMapper {
                         } else {
                             openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
                         }
-                    } else if (value instanceof List<?>) {
+                    }
+                    else if (value instanceof List<?>) {
                         List<String> valueList = (List<String>) value;
                         valueList.forEach(s -> {
                             MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(s);
@@ -188,6 +189,45 @@ public class ObservationMapper {
                         });
                     }
                 } else {
+                    if (value instanceof List<?>) {
+                        List<?> valueList = (List<Map>) value;
+                        valueList.forEach(element -> {
+                            if (element instanceof Map<?, ?>) {
+                                Map<?, ?> questionGroupMap = (Map<String, Object>) element;
+                                List<OpenMRSSaveObservation> groupMembers = new ArrayList<>();
+                                List<OpenMRSSaveObservation> newGroupMembers = new ArrayList<>();
+                                boolean isUniqueGroup = true;
+                                for (Map.Entry<?, ?> e : questionGroupMap.entrySet()) {
+                                    Object key1 = e.getKey();
+                                    Object value1 = e.getValue();
+                                    if (key1 instanceof String) {
+                                        String keyString = (String) key1;
+                                        MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(keyString);
+                                        boolean isUnique = true;
+                                        for (OpenMRSSaveObservation grpMember : groupMembers) {
+                                            if (grpMember.getConcept().equals(answerMapping.getIntSystemValue())) {
+                                                isUnique = false;
+                                                isUniqueGroup = false;
+                                                break;
+                                            }
+                                        }
+                                        if (isUnique) {
+                                            groupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
+                                        } else {
+                                            newGroupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
+                                        }
+                                    }
+                                }
+                                if (!groupMembers.isEmpty()) {
+                                    openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), groupMembers));
+                                }
+                                if (!newGroupMembers.isEmpty() && !isUniqueGroup) {
+                                    openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), newGroupMembers));
+                                }
+                            }
+                        });
+                        continue;
+                    }
                     if (questionMapping.isText() && value instanceof String && ((String) value).isBlank()) {
                         continue;
                     }
