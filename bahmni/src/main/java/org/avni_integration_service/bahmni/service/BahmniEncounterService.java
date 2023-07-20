@@ -49,4 +49,8 @@ public class BahmniEncounterService {
     public OpenMRSDefaultEncounter getDefaultEncounter(String uuid) {
         return encounterRepository.getDefaultEncounter(uuid);
     }
+
+    public boolean hasDiagnosesObs(BahmniEncounter bahmniEncounter){
+        return !bahmniEncounter.getOpenMRSEncounter().getDiagnoses().isEmpty();
+    }
 }

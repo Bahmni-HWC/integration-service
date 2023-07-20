@@ -11,6 +11,9 @@ public class BahmniEncounterToAvniEncounterMetaData implements BahmniToAvniMetaD
     private MappingMetaData labEncounterTypeMapping;
     private MappingMetaData drugOrderEncounterTypeMapping;
     private MappingMetaData drugOrderConceptMapping;
+
+    private MappingMetaData diagnosesEncounterTypeMapping;
+    private MappingMetaData diagnosesConceptMapping;
     private List<MappingMetaData> programMappings;
     private List<IgnoredIntegratingConcept> ignoredIntegratingConcepts;
 
@@ -85,4 +88,25 @@ public class BahmniEncounterToAvniEncounterMetaData implements BahmniToAvniMetaD
     public boolean isIgnoredInBahmni(String conceptUuid) {
         return ignoredIntegratingConcepts.stream().filter(ignoredIntegratingConcept -> ignoredIntegratingConcept.getConceptId().equals(conceptUuid)).findFirst().orElse(null) != null;
     }
+
+    public MappingMetaData getDiagnosesEncounterTypeMapping() {
+        return diagnosesEncounterTypeMapping;
+    }
+
+    public MappingMetaData getDiagnosesConceptMapping() {
+        return diagnosesConceptMapping;
+    }
+
+    public void setDiagnosesEncounterTypeMapping(MappingMetaData diagnosesEncounterTypeMapping) {
+        this.diagnosesEncounterTypeMapping = diagnosesEncounterTypeMapping;
+    }
+
+    public void setDiagnosesConceptMapping(MappingMetaData diagnosesConceptMapping) {
+        this.diagnosesConceptMapping = diagnosesConceptMapping;
+    }
+
+    public boolean hasDiagnosesMappings(){
+        return this.diagnosesConceptMapping != null && this.diagnosesEncounterTypeMapping != null;
+    }
+
 }

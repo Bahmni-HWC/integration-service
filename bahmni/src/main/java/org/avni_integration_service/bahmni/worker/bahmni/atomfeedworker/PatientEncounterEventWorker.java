@@ -69,6 +69,9 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
                 if (encounterService.isProcessablePrescriptionEncounter(bahmniEncounter, constants)) {
                     processDrugOrderEncounter(bahmniEncounter.getOpenMRSEncounter(), metaData, avniPatient);
                 }
+                if(metaData.hasDiagnosesMappings() && encounterService.hasDiagnosesObs(bahmniEncounter)){
+                    processDiagnosesEncounter(bahmniEncounter.getOpenMRSEncounter(), metaData, avniPatient);
+                }
                 List<BahmniSplitEncounter> splitEncounters = bahmniEncounter.getSplitEncounters();
                 for (BahmniSplitEncounter splitEncounter : splitEncounters) {
                     MappingMetaData mapping = metaData.getEncounterMappingFor(splitEncounter.getFormConceptSetUuid());
@@ -86,6 +89,22 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
         } catch (SubjectIdChangedException e) {
             avniBahmniErrorService.errorOccurred(bahmniEncounter.getOpenMRSEncounter(), BahmniErrorType.SubjectIdChanged);
             logger.info("Subject id changed!!");
+        }
+    }
+
+    private void processDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) throws NoSubjectWithIdException, SubjectIdChangedException{
+        GeneralEncounter existingAvniEncounter = avniEncounterService.getDiagnosesGeneralEncounter(openMRSEncounter, metaData);
+        if (existingAvniEncounter != null && avniPatient != null) {
+            avniEncounterService.updateDiagnosesEncounter(openMRSEncounter, existingAvniEncounter, metaData, avniPatient);
+            logger.info("Updated diagnoses encounter");
+        } else if (existingAvniEncounter != null && avniPatient == null) {
+            throw new SubjectIdChangedException();
+        } else if (existingAvniEncounter == null && avniPatient != null) {
+            avniEncounterService.createDiagnosesEncounter(openMRSEncounter, metaData, avniPatient);
+            logger.info("Created diagnoses encounter");
+        }
+        else if (existingAvniEncounter == null && avniPatient == null) {
+            throw new NoSubjectWithIdException();
         }
     }
 

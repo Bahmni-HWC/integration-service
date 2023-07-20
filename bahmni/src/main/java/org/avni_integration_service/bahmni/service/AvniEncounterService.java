@@ -138,4 +138,21 @@ public class AvniEncounterService extends BaseAvniEncounterService {
     public void processPatientNotFound(GeneralEncounter encounter) {
         avniBahmniErrorService.errorOccurred(encounter, BahmniErrorType.NoPatientWithId);
     }
+
+    public GeneralEncounter getDiagnosesGeneralEncounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData) {
+        Map<String, Object> obsCriteria = Map.of(metaData.getBahmniEntityUuidConcept(), openMRSEncounter.getUuid());
+        return avniEncounterRepository.getEncounter(metaData.getDiagnosesEncounterTypeMapping().getAvniValue(), obsCriteria);
+    }
+
+    public void createDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
+        if (openMRSEncounter.isVoided()) return;
+
+        GeneralEncounter encounter = openMRSEncounterMapper.mapDiagnosesObsToAvniEncounter(openMRSEncounter, metaData, avniPatient);
+        avniEncounterRepository.create(encounter);
+    }
+
+    public void updateDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, GeneralEncounter existingAvniEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
+        GeneralEncounter encounter = openMRSEncounterMapper.mapDiagnosesObsToAvniEncounter(openMRSEncounter, metaData, avniPatient);
+        avniEncounterRepository.update(existingAvniEncounter.getUuid(), encounter);
+    }
 }
