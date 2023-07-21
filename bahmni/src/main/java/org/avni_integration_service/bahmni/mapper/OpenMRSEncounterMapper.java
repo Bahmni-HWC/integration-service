@@ -57,7 +57,7 @@ public class OpenMRSEncounterMapper {
         encounter.setSubjectId(avniPatient.getSubjectId());
         List<String> drugOrders = openMRSFullEncounter.getDrugOrders(defaultEncounter);
         encounter.addObservation(bahmniEncounterToAvniEncounterMetaData.getBahmniEntityUuidConcept(), openMRSFullEncounter.getUuid());
-        encounter.addObservation(bahmniEncounterToAvniEncounterMetaData.getDrugOrderConceptMapping().getAvniValue(), String.join(";   ", drugOrders));
+        encounter.addObservation(bahmniEncounterToAvniEncounterMetaData.getDrugOrderConceptMapping().getAvniValue(), convertItemsAsBulletedString(drugOrders));
         encounter.setEmptyCancelObservations();
         encounter.setVoided(openMRSFullEncounter.isVoided());
         return encounter;
@@ -117,5 +117,30 @@ public class OpenMRSEncounterMapper {
         enrolment.setEmptyExitObservations();
         enrolment.addObservation(metaData.getBahmniEntityUuidConcept(), splitEncounter.getOpenMRSEncounterUuid());
         return enrolment;
+    }
+
+    public GeneralEncounter mapDiagnosesObsToAvniEncounter(OpenMRSFullEncounter openMRSFullEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
+        GeneralEncounter encounter = new GeneralEncounter();
+        encounter.setEncounterDateTime(FormatAndParseUtil.fromIsoDateString(openMRSFullEncounter.getEncounterDatetime()));
+        encounter.setEncounterType(metaData.getDiagnosesEncounterTypeMapping().getAvniValue());
+        encounter.setSubjectId(avniPatient.getSubjectId());
+        List<String> diagnoses = openMRSFullEncounter.getDiagnoses();
+        String concatenatedDiagnoses = convertItemsAsBulletedString(diagnoses);
+        encounter.addObservation(metaData.getDiagnosesConceptMapping().getAvniValue(), concatenatedDiagnoses);
+        encounter.addObservation(metaData.getBahmniEntityUuidConcept(), openMRSFullEncounter.getUuid());
+        encounter.setEmptyCancelObservations();
+        encounter.setVoided(openMRSFullEncounter.isVoided());
+        return encounter;
+    }
+
+    private String convertItemsAsBulletedString(List<String> list){
+        String concatenatedString = "";
+        for(int i=0;i < list.size();i++){
+            if(i > 0){
+                concatenatedString = concatenatedString.concat("\n\n");
+            }
+            concatenatedString = concatenatedString.concat(String.format("%d. %s", i+1, list.get(i)));
+        }
+        return concatenatedString;
     }
 }

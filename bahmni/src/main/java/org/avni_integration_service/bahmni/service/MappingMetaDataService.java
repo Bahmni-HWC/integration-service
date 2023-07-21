@@ -71,6 +71,8 @@ public class MappingMetaDataService {
         metaData.addLabMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.labEncounterType));
         metaData.addDrugOrderMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.drugOrderEncounterType));
         metaData.addDrugOrderConceptMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.drugOrderConcept));
+        metaData.setDiagnosesEncounterTypeMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.diagnosesEncounterType));
+        metaData.setDiagnosesConceptMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.diagnosesConcept));
         metaData.addProgramMapping(mappingMetaDataRepository.findAllByMappingGroupAndMappingType(bahmniMappingGroup.programEnrolment, bahmniMappingType.bahmniFormCommunityProgram));
         ArrayList<IgnoredIntegratingConcept> ignoredIntegratingConcepts = new ArrayList<>();
         ignoredBahmniConceptRepository.findAll().forEach(ignoredIntegratingConcepts::add);

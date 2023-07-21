@@ -210,4 +210,50 @@ public class OpenMRSFullEncounter {
         String displayField = (String) observation.get("display");
         return displayField.split(":")[1].trim();
     }
+
+    public boolean hasDiagnosesObs() {
+        return getDiagnosesObs().size() != 0;
+    }
+    private List<Map<String, Object>> getDiagnosesObs() {
+        List<Map<String, Object>> observations = (List<Map<String, Object>>) map.get("obs");
+        return observations.stream().filter(observation -> {
+            Map<String, Object> conceptObj = (Map<String, Object>) observation.get("concept");
+            return conceptObj.get("display").equals("Visit Diagnoses");
+        }).collect(Collectors.toList());
+    }
+
+    public List<String> getDiagnoses() {
+        List<Map<String, Object>> diagnosesObs = getDiagnosesObs();
+        List<String> diagnoses = new ArrayList<>();
+        for (Map<String, Object> diagnosisObs : diagnosesObs) {
+            String diagnosis="";
+            String diagnosisOrder="";
+            String diagnosisCertainty="";
+            List<Map<String, Object>> groupMembers = (List<Map<String, Object>>) diagnosisObs.get("groupMembers");
+            for (Map<String, Object> groupMember : groupMembers) {
+                Map<String, Object> conceptObj = (Map<String, Object>) groupMember.get("concept");
+                if (conceptObj.get("display").equals("Diagnosis order")) {
+                    diagnosisOrder = getValueDisplayFromObs(groupMember);
+                } else if (conceptObj.get("display").equals("Diagnosis Certainty")) {
+                    diagnosisCertainty = getValueDisplayFromObs(groupMember);
+                } else if (conceptObj.get("display").equals("Coded Diagnosis")) {
+                    diagnosis = getValueDisplayFromObs(groupMember);
+                } else if (conceptObj.get("display").equals("Non-coded Diagnosis")) {
+                    diagnosis = getValueDisplayFromObs(groupMember);
+                }
+            }
+            diagnoses.add(String.format("%s - %s - %s", diagnosis, diagnosisCertainty, diagnosisOrder));
+        }
+        return diagnoses;
+    }
+
+
+    private String getValueDisplayFromObs(Map<String, Object> observation) {
+        Object obsValue = observation.get("value");
+        if (obsValue instanceof Map) {
+            return ((Map) obsValue).get("display").toString();
+        } else {
+            return obsValue.toString();
+        }
+    }
 }
