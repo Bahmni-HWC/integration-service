@@ -1,11 +1,14 @@
 package org.avni_integration_service.bahmni.contract;
 
+import java.util.List;
+
 public class OpenMRSObservation {
     private String conceptUuid;
     private Object value;
     private Object valueComplex;
     private String obsUuid;
     private boolean voided;
+    private List<OpenMRSObservation> groupMembers;
 
     public String getConceptUuid() {
         return conceptUuid;
@@ -53,5 +56,13 @@ public class OpenMRSObservation {
 
     public void setValueComplex(Object valueComplex) {
         this.valueComplex = valueComplex;
+    }
+
+    public List<OpenMRSObservation> getGroupMembers() {
+        return groupMembers;
+    }
+
+    public void setGroupMembers(List<OpenMRSObservation> groupMembers) {
+        this.groupMembers = groupMembers;
     }
 }

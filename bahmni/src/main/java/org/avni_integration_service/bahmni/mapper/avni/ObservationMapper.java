@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 import static org.avni_integration_service.bahmni.contract.OpenMRSSaveObservation.createVoidedObs;
+import static org.avni_integration_service.bahmni.contract.OpenMRSSaveObservation.createVoidedObsWithQuestionGroup;
 
 @Component
 public class ObservationMapper {
@@ -81,7 +82,46 @@ public class ObservationMapper {
                             }
                         });
                     }
+                } else {
+                    if (answer instanceof List<?>) {
+                        List<?> valueList = (List<Map>) answer;
+                        valueList.forEach(element -> {
+                            if (element instanceof Map<?, ?>) {
+                                Map<?, ?> questionGroupMap = (Map<String, Object>) element;
+                                List<OpenMRSSaveObservation> groupMembers = new ArrayList<>();
+                                List<OpenMRSSaveObservation> newGroupMembers = new ArrayList<>();
+                                boolean isUniqueGroup = true;
+                                for (Map.Entry<?, ?> e : questionGroupMap.entrySet()) {
+                                    Object key1 = e.getKey();
+                                    Object value1 = e.getValue();
+                                    if (key1 instanceof String) {
+                                        String keyString = (String) key1;
+                                        MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(keyString);
+                                        boolean isUnique = true;
+                                        for (OpenMRSSaveObservation grpMember : groupMembers) {
+                                            if (grpMember.getConcept().equals(answerMapping.getIntSystemValue())) {
+                                                isUnique = false;
+                                                isUniqueGroup = false;
+                                                break;
+                                            }
+                                        }
+                                        if (isUnique) {
+                                            groupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
                                         } else {
+                                            newGroupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
+                                        }
+                                    }
+                                }
+                                if (!groupMembers.isEmpty()) {
+                                    updatedObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), groupMembers));
+                                }
+                                if (!newGroupMembers.isEmpty() && !isUniqueGroup) {
+                                    updatedObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), newGroupMembers));
+                                }
+                            }
+                        });
+                        continue;
+                    }
                     if (questionMapping.isText() && answer instanceof String && ((String) answer).isBlank()) {
                         continue;
                     }
@@ -135,116 +175,128 @@ public class ObservationMapper {
 
     private List<OpenMRSSaveObservation> voidedObservations(List<OpenMRSObservation> openMRSObservations, Map<String, Object> avniObservations, MappingMetaDataCollection conceptMappings, List<String> exclude) {
         List<OpenMRSSaveObservation> voidedObservations = new ArrayList<>();
-        openMRSObservations.stream().filter(o -> !exclude.contains(o.getConceptUuid())).forEach(openMRSObservation -> {
-            MappingMetaData questionMapping = conceptMappings.getMappingForBahmniValue(openMRSObservation.getConceptUuid());
-            String avniConceptName = questionMapping.getAvniValue();
-            Object avniObsValue = avniObservations.get(avniConceptName);
+        for (OpenMRSObservation o : openMRSObservations) {
+            if (!exclude.contains(o.getConceptUuid())) {
+                MappingMetaData questionMapping = conceptMappings.getMappingForBahmniValue(o.getConceptUuid());
+                String avniConceptName = questionMapping.getAvniValue();
+                Object avniObsValue = avniObservations.get(avniConceptName);
 
-            if (avniObsValue == null) {
-                voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
-            } else if (questionMapping.isCoded()) {
-                String openMRSAnswerName = isComplexConcept(openMRSObservation.getConceptUuid()) ? conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValueComplex()) : conceptMappings.getAvniValueForBahmniValue((String) openMRSObservation.getValue());
-                if (avniObsValue instanceof List<?>) {
-                    List<String> avniObsValueList = (List<String>) avniObsValue;
-                    if (!avniObsValueList.contains(openMRSAnswerName)) {
-                        voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
+                if (avniObsValue != null && avniObsValue instanceof List<?>) {
+                    List<OpenMRSSaveObservation> groupMembers = new ArrayList<>();
+                    if (o.getGroupMembers() != null) {
+                        for (OpenMRSObservation groupMember : o.getGroupMembers()) {
+                            groupMembers.add(createVoidedObsWithQuestionGroup(groupMember.getConceptUuid(), groupMember.getObsUuid(), null));
+                        }
                     }
-                } else if (avniObsValue instanceof String) {
-                    String avniObsValueString = (String) avniObsValue;
-                    if (!avniObsValueString.equals(openMRSAnswerName)) {
-                        voidedObservations.add(createVoidedObs(openMRSObservation.getObsUuid(), openMRSObservation.getConceptUuid()));
+                    voidedObservations.add(createVoidedObsWithQuestionGroup(avniConceptName, o.getObsUuid(), groupMembers));
+                }
+                else if (avniObsValue != null ){
+                    voidedObservations.add(createVoidedObs(o.getObsUuid(), o.getConceptUuid()));
+                }
+                else if (questionMapping.isCoded()) {
+                    String openMRSAnswerName = isComplexConcept(o.getConceptUuid()) ? conceptMappings.getAvniValueForBahmniValue((String) o.getValueComplex()) : conceptMappings.getAvniValueForBahmniValue((String) o.getValue());
+                    if (avniObsValue instanceof List<?>) {
+                        List<String> avniObsValueList = (List<String>) avniObsValue;
+                        if (!avniObsValueList.contains(openMRSAnswerName)) {
+                            voidedObservations.add(createVoidedObs(o.getObsUuid(), o.getConceptUuid()));
+                        }
+                    } else if (avniObsValue instanceof String) {
+                        String avniObsValueString = (String) avniObsValue;
+                        if (!avniObsValueString.equals(openMRSAnswerName)) {
+                            voidedObservations.add(createVoidedObs(o.getObsUuid(), o.getConceptUuid()));
+                        }
                     }
                 }
             }
-        });
+        }
         return voidedObservations;
     }
 
     public List<OpenMRSSaveObservation> mapObservations(Map<String, Object> avniObservations) {
-        List<OpenMRSSaveObservation> openMRSObservations = new ArrayList<>();
-        MappingMetaDataCollection conceptMappings = mappingService.findAll(bahmniMappingGroup.observation, bahmniMappingType.concept);
-        for (Map.Entry<String, Object> entry : avniObservations.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            MappingMetaData questionMapping = conceptMappings.getMappingForAvniValue(key);
-            if (questionMapping != null) {
-                if (questionMapping.isCoded()) {
-                    if (value instanceof String) {
-                        MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue((String) value);
-                        if (isComplexConcept(questionMapping.getIntSystemValue())) {
-                            openMRSObservations.add(OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
-                        } else {
-                            openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
-                        }
-                    }
-                    else if (value instanceof List<?>) {
-                        List<String> valueList = (List<String>) value;
-                        valueList.forEach(s -> {
-                            MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(s);
+            List<OpenMRSSaveObservation> openMRSObservations = new ArrayList<>();
+            MappingMetaDataCollection conceptMappings = mappingService.findAll(bahmniMappingGroup.observation, bahmniMappingType.concept);
+            for (Map.Entry<String, Object> entry : avniObservations.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                MappingMetaData questionMapping = conceptMappings.getMappingForAvniValue(key);
+                if (questionMapping != null) {
+                    if (questionMapping.isCoded()) {
+                        if (value instanceof String) {
+                            MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue((String) value);
                             if (isComplexConcept(questionMapping.getIntSystemValue())) {
                                 openMRSObservations.add(OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
                             } else {
                                 openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
                             }
-                        });
                     }
-                } else {
-                    if (value instanceof List<?>) {
-                        List<?> valueList = (List<Map>) value;
-                        valueList.forEach(element -> {
-                            if (element instanceof Map<?, ?>) {
-                                Map<?, ?> questionGroupMap = (Map<String, Object>) element;
-                                List<OpenMRSSaveObservation> groupMembers = new ArrayList<>();
-                                List<OpenMRSSaveObservation> newGroupMembers = new ArrayList<>();
-                                boolean isUniqueGroup = true;
-                                for (Map.Entry<?, ?> e : questionGroupMap.entrySet()) {
-                                    Object key1 = e.getKey();
-                                    Object value1 = e.getValue();
-                                    if (key1 instanceof String) {
-                                        String keyString = (String) key1;
-                                        MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(keyString);
-                                        boolean isUnique = true;
-                                        for (OpenMRSSaveObservation grpMember : groupMembers) {
-                                            if (grpMember.getConcept().equals(answerMapping.getIntSystemValue())) {
-                                                isUnique = false;
-                                                isUniqueGroup = false;
-                                                break;
+                    else if (value instanceof List<?>) {
+                            List<String> valueList = (List<String>) value;
+                            valueList.forEach(s -> {
+                                MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(s);
+                                if (isComplexConcept(questionMapping.getIntSystemValue())) {
+                                    openMRSObservations.add(OpenMRSSaveObservation.createComplexObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                                } else {
+                                    openMRSObservations.add(OpenMRSSaveObservation.createCodedObs(questionMapping.getIntSystemValue(), answerMapping.getIntSystemValue()));
+                                }
+                            });
+                        }
+                    } else {
+                        if (value instanceof List<?>) {
+                            List<?> valueList = (List<Map>) value;
+                            valueList.forEach(element -> {
+                                if (element instanceof Map<?, ?>) {
+                                    Map<?, ?> questionGroupMap = (Map<String, Object>) element;
+                                    List<OpenMRSSaveObservation> groupMembers = new ArrayList<>();
+                                    List<OpenMRSSaveObservation> newGroupMembers = new ArrayList<>();
+                                    boolean isUniqueGroup = true;
+                                    for (Map.Entry<?, ?> e : questionGroupMap.entrySet()) {
+                                        Object key1 = e.getKey();
+                                        Object value1 = e.getValue();
+                                        if (key1 instanceof String) {
+                                            String keyString = (String) key1;
+                                            MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(keyString);
+                                            boolean isUnique = true;
+                                            for (OpenMRSSaveObservation grpMember : groupMembers) {
+                                                if (grpMember.getConcept().equals(answerMapping.getIntSystemValue())) {
+                                                    isUnique = false;
+                                                    isUniqueGroup = false;
+                                                    break;
+                                                }
+                                            }
+                                            if (isUnique) {
+                                                groupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
+                                            } else {
+                                                newGroupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
                                             }
                                         }
-                                        if (isUnique) {
-                                            groupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
-                                        } else {
-                                            newGroupMembers.add(OpenMRSSaveObservation.createPrimitiveObs(answerMapping.getIntSystemValue(), value1, questionMapping.getDataTypeHint()));
-                                        }
+                                    }
+                                    if (!groupMembers.isEmpty()) {
+                                        openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), groupMembers));
+                                    }
+                                    if (!newGroupMembers.isEmpty() && !isUniqueGroup) {
+                                        openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), newGroupMembers));
                                     }
                                 }
-                                if (!groupMembers.isEmpty()) {
-                                    openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), groupMembers));
-                                }
-                                if (!newGroupMembers.isEmpty() && !isUniqueGroup) {
-                                    openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObsForQuestionGroup(questionMapping.getIntSystemValue(), newGroupMembers));
-                                }
-                            }
-                        });
-                        continue;
+                            });
+                            continue;
+                        }
+                        if (questionMapping.isText() && value instanceof String && ((String) value).isBlank()) {
+                            continue;
+                        }
+                        openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObs(questionMapping.getIntSystemValue(), value, questionMapping.getDataTypeHint()));
                     }
-                    if (questionMapping.isText() && value instanceof String && ((String) value).isBlank()) {
-                        continue;
-                    }
-                    openMRSObservations.add(OpenMRSSaveObservation.createPrimitiveObs(questionMapping.getIntSystemValue(), value, questionMapping.getDataTypeHint()));
                 }
             }
+            return openMRSObservations;
         }
-        return openMRSObservations;
-    }
 
     private boolean isComplexConcept(String conceptUUID) {
-        if (complexConcepts == null) {
-            return false;
+            if (complexConcepts == null) {
+                return false;
+            }
+            List<String> complexConceptUUIDs = Arrays.asList(complexConcepts.split(","));
+            return complexConceptUUIDs.contains(conceptUUID);
+
         }
-        List<String> complexConceptUUIDs = Arrays.asList(complexConcepts.split(","));
-        return complexConceptUUIDs.contains(conceptUUID);
 
     }
-
-}
