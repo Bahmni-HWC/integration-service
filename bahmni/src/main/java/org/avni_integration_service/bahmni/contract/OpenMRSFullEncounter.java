@@ -211,6 +211,9 @@ public class OpenMRSFullEncounter {
         return displayField.split(":")[1].trim();
     }
 
+    public boolean hasDiagnosesObs() {
+        return getDiagnosesObs().size() != 0;
+    }
     private List<Map<String, Object>> getDiagnosesObs() {
         List<Map<String, Object>> observations = (List<Map<String, Object>>) map.get("obs");
         return observations.stream().filter(observation -> {

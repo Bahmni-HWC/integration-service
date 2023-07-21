@@ -51,6 +51,6 @@ public class BahmniEncounterService {
     }
 
     public boolean hasDiagnosesObs(BahmniEncounter bahmniEncounter){
-        return !bahmniEncounter.getOpenMRSEncounter().getDiagnoses().isEmpty();
+        return bahmniEncounter.getOpenMRSEncounter().hasDiagnosesObs();
     }
 }
