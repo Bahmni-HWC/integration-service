@@ -18,6 +18,7 @@ import org.avni_integration_service.integration_data.domain.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -62,6 +63,11 @@ public class AvniEncounterService extends BaseAvniEncounterService {
         Map<String, Object> obsCriteria = Map.of(metaData.getBahmniEntityUuidConcept(), bahmniSplitEncounter.getOpenMRSEncounterUuid());
         // OpenMRS encounter uuid will be shared by multiple entities in Avni, hence encounter type is required
         return avniEncounterRepository.getEncounter(metaData.getAvniMappedName(bahmniSplitEncounter.getFormConceptSetUuid()), obsCriteria);
+    }
+
+    public GeneralEncounter getGeneralEncounterByEncounterType(String avniEncounterType, String openMRSEncounterUUID, BahmniEncounterToAvniEncounterMetaData metaData) {
+        Map<String, Object> obsCriteria = Map.of(metaData.getBahmniEntityUuidConcept(), openMRSEncounterUUID);
+        return avniEncounterRepository.getEncounter(avniEncounterType, obsCriteria);
     }
 
     public GeneralEncounter getLabResultGeneralEncounter(OpenMRSFullEncounter openMRSFullEncounter, BahmniEncounterToAvniEncounterMetaData metaData) {
@@ -110,7 +116,7 @@ public class AvniEncounterService extends BaseAvniEncounterService {
             logger.debug(String.format("Skipping voided Avni encounter %s", generalEncounter.getUuid()));
             return null;
         }
-        var visit = visitService.getOrCreateVisit(patient, subject ,generalEncounter.getEncounterDateTime());
+        var visit = visitService.getOrCreateVisit(patient, subject, generalEncounter.getEncounterDateTime());
         logger.debug(String.format("Creating new Bahmni Encounter for Avni general encounter %s", generalEncounter.getUuid()));
         var openMRSEncounter = encounterMapper.mapEncounter(generalEncounter, patient.getUuid(), constants, visit);
         var savedEncounter = openMRSEncounterRepository.createEncounter(openMRSEncounter);
@@ -153,6 +159,21 @@ public class AvniEncounterService extends BaseAvniEncounterService {
 
     public void updateDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, GeneralEncounter existingAvniEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
         GeneralEncounter encounter = openMRSEncounterMapper.mapDiagnosesObsToAvniEncounter(openMRSEncounter, metaData, avniPatient);
+        avniEncounterRepository.update(existingAvniEncounter.getUuid(), encounter);
+    }
+
+    public void create(OpenMRSFullEncounter openMRSFullEncounter, String avniEncounterType, List<Map<String, Object>> form2Obs, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
+        if (openMRSFullEncounter.isVoided()) {
+            logger.info(String.format("Skipping voided Bahmni encounter: %s", openMRSFullEncounter.getUuid()));
+            return;
+        }
+
+        GeneralEncounter encounter = openMRSEncounterMapper.mapToAvniEncounter(openMRSFullEncounter, avniEncounterType, form2Obs, metaData, avniPatient);
+        avniEncounterRepository.create(encounter);
+    }
+
+    public void update(OpenMRSFullEncounter openMRSFullEncounter, GeneralEncounter existingAvniEncounter, List<Map<String, Object>> form2Obs, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
+        GeneralEncounter encounter = openMRSEncounterMapper.mapToAvniEncounter(openMRSFullEncounter, existingAvniEncounter.getEncounterType(), form2Obs, metaData, avniPatient);
         avniEncounterRepository.update(existingAvniEncounter.getUuid(), encounter);
     }
 }
