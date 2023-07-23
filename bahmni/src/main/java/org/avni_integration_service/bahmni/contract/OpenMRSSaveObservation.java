@@ -30,7 +30,7 @@ public class OpenMRSSaveObservation {
         return openMRSSaveObservation;
     }
 
-    public static OpenMRSSaveObservation createVoidedObsWithQuestionGroup(String concept, String uuid, List<OpenMRSSaveObservation> groupMembers){
+    public static OpenMRSSaveObservation createVoidedObsWithMultipleGroupMember(String concept, String uuid, List<OpenMRSSaveObservation> groupMembers){
         OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
         openMRSSaveObservation.setUuid(uuid);
         openMRSSaveObservation.concept = concept;
@@ -46,7 +46,7 @@ public class OpenMRSSaveObservation {
         return openMRSSaveObservation;
     }
 
-    public static OpenMRSSaveObservation createPrimitiveObsForQuestionGroup(String concept, List<OpenMRSSaveObservation> groupMembers ) {
+    public static OpenMRSSaveObservation createPrimitiveObsWithMultipleGroupMember(String concept, List<OpenMRSSaveObservation> groupMembers ) {
         OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
         openMRSSaveObservation.concept = concept;
         openMRSSaveObservation.groupMembers = groupMembers;
