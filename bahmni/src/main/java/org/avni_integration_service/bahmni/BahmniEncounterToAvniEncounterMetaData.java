@@ -17,6 +17,8 @@ public class BahmniEncounterToAvniEncounterMetaData implements BahmniToAvniMetaD
     private List<MappingMetaData> programMappings;
     private List<IgnoredIntegratingConcept> ignoredIntegratingConcepts;
 
+    private List<MappingMetaData> bahmniForm2Mappings;
+
     public String getAvniMappedName(String openmrsEncounterTypeUuid) {
         MappingMetaData mapping = getMappingMetaData(openmrsEncounterTypeUuid);
         if (mapping != null) return mapping.getAvniValue();
@@ -109,4 +111,15 @@ public class BahmniEncounterToAvniEncounterMetaData implements BahmniToAvniMetaD
         return this.diagnosesConceptMapping != null && this.diagnosesEncounterTypeMapping != null;
     }
 
+    public void setBahmniForm2Mappings(List<MappingMetaData> bahmniForm2Mappings) {
+        this.bahmniForm2Mappings = bahmniForm2Mappings;
+    }
+
+    public boolean hasBahmniForm2Mappings(){
+        return this.bahmniForm2Mappings != null && !this.bahmniForm2Mappings.isEmpty();
+    }
+
+    public MappingMetaData getBahmniForm2MappingFor(String bahmniForm2Name) {
+        return bahmniForm2Mappings.stream().filter(bahmniForm2Mapping -> bahmniForm2Mapping.getIntSystemValue().equals(bahmniForm2Name)).findFirst().orElse(null);
+    }
 }

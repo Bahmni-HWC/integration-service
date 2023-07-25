@@ -39,6 +39,7 @@ public class BahmniMappingType {
     public final MappingType avniCatchmentBahmniLocation;
     public MappingType diagnosesEncounterType;
     public MappingType diagnosesConcept;
+    public MappingType bahmniForm2Name;
 
     @Autowired
     public BahmniMappingType(MappingTypeRepository mappingTypeRepository) {
@@ -71,6 +72,7 @@ public class BahmniMappingType {
         this.avniCatchmentBahmniLocation = mappingTypeRepository.findByName("AvniCatchment_BahmniLocation");
         this.diagnosesEncounterType = mappingTypeRepository.findByName("DiagnosesEncounterType");
         this.diagnosesConcept = mappingTypeRepository.findByName("DiagnosesConcept");
+        this.bahmniForm2Name = mappingTypeRepository.findByName("BahmniForm2Name");
 
     }
 }

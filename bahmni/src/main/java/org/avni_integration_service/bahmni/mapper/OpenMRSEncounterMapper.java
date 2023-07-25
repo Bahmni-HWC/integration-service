@@ -1,5 +1,6 @@
 package org.avni_integration_service.bahmni.mapper;
 
+import org.apache.log4j.Logger;
 import org.avni_integration_service.bahmni.BahmniMappingGroup;
 import org.avni_integration_service.bahmni.BahmniMappingType;
 import org.avni_integration_service.bahmni.contract.OpenMRSDefaultEncounter;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class OpenMRSEncounterMapper {
@@ -27,6 +29,8 @@ public class OpenMRSEncounterMapper {
     private BahmniMappingGroup bahmniMappingGroup;
     @Autowired
     private BahmniMappingType bahmniMappingType;
+
+    private static final Logger logger = Logger.getLogger(OpenMRSEncounterMapper.class);
 
     public GeneralEncounter mapToAvniEncounter(BahmniSplitEncounter splitEncounter, BahmniEncounterToAvniEncounterMetaData bahmniEncounterToAvniEncounterMetaData, GeneralEncounter avniPatient) {
         GeneralEncounter encounter = new GeneralEncounter();
@@ -133,14 +137,32 @@ public class OpenMRSEncounterMapper {
         return encounter;
     }
 
-    private String convertItemsAsBulletedString(List<String> list){
+    private String convertItemsAsBulletedString(List<String> list) {
         String concatenatedString = "";
-        for(int i=0;i < list.size();i++){
-            if(i > 0){
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
                 concatenatedString = concatenatedString.concat("\n\n");
             }
-            concatenatedString = concatenatedString.concat(String.format("%d. %s", i+1, list.get(i)));
+            concatenatedString = concatenatedString.concat(String.format("%d. %s", i + 1, list.get(i)));
         }
         return concatenatedString;
+    }
+
+    public GeneralEncounter mapToAvniEncounter(OpenMRSFullEncounter openMRSFullEncounter, String avniEncounterType, List<Map<String, Object>> form2Obs, BahmniEncounterToAvniEncounterMetaData bahmniEncounterToAvniEncounterMetaData, GeneralEncounter avniPatient) {
+        BahmniForm2ObsMapper bahmniForm2ObsMapper = new BahmniForm2ObsMapper(mappingMetaDataRepository,bahmniMappingGroup,bahmniMappingType);
+        Map<String, Object> avniObservations = bahmniForm2ObsMapper.mapForm2ObsToAvniObs(form2Obs);
+        if(avniObservations.isEmpty()){
+            throw new RuntimeException("No observations mapped for encounter with uuid = " + openMRSFullEncounter.getUuid());
+        }
+        GeneralEncounter encounter = new GeneralEncounter();
+        encounter.setObservations(bahmniForm2ObsMapper.mapForm2ObsToAvniObs(form2Obs));
+        encounter.addObservation(bahmniEncounterToAvniEncounterMetaData.getBahmniEntityUuidConcept(), openMRSFullEncounter.getUuid());
+        encounter.setEncounterDateTime(FormatAndParseUtil.fromIsoDateString(openMRSFullEncounter.getEncounterDatetime()));
+        encounter.setEncounterType(avniEncounterType);
+        encounter.setSubjectId(avniPatient.getSubjectId());
+
+        encounter.setEmptyCancelObservations();
+        encounter.setVoided(openMRSFullEncounter.isVoided());
+        return encounter;
     }
 }

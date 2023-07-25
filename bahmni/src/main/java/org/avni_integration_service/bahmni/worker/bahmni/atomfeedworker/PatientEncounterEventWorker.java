@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWorker {
@@ -69,17 +70,21 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
                 if (encounterService.isProcessablePrescriptionEncounter(bahmniEncounter, constants)) {
                     processDrugOrderEncounter(bahmniEncounter.getOpenMRSEncounter(), metaData, avniPatient);
                 }
-                if(metaData.hasDiagnosesMappings() && encounterService.hasDiagnosesObs(bahmniEncounter)){
+                if (metaData.hasDiagnosesMappings() && encounterService.hasDiagnosesObs(bahmniEncounter)) {
                     processDiagnosesEncounter(bahmniEncounter.getOpenMRSEncounter(), metaData, avniPatient);
                 }
-                List<BahmniSplitEncounter> splitEncounters = bahmniEncounter.getSplitEncounters();
-                for (BahmniSplitEncounter splitEncounter : splitEncounters) {
-                    MappingMetaData mapping = metaData.getEncounterMappingFor(splitEncounter.getFormConceptSetUuid());
-                    switch (mapping.getMappingGroup().name()) {
-                        case "GeneralEncounter" -> processGeneralEncounter(splitEncounter, metaData, avniPatient);
-                        case "ProgramEnrolment" -> throw new RuntimeException("Cannot map Bahmni Encounter Form to Avni Enrolment");
-                        case "ProgramEncounter" -> processProgramEncounter(splitEncounter, metaData, avniPatient);
-                    }
+//                List<BahmniSplitEncounter> splitEncounters = bahmniEncounter.getSplitEncounters();
+//                for (BahmniSplitEncounter splitEncounter : splitEncounters) {
+//                    MappingMetaData mapping = metaData.getEncounterMappingFor(splitEncounter.getFormConceptSetUuid());
+//                    switch (mapping.getMappingGroup().name()) {
+//                        case "GeneralEncounter" -> processGeneralEncounter(splitEncounter, metaData, avniPatient);
+//                        case "ProgramEnrolment" -> throw new RuntimeException("Cannot map Bahmni Encounter Form to Avni Enrolment");
+//                        case "ProgramEncounter" -> processProgramEncounter(splitEncounter, metaData, avniPatient);
+//                    }
+//                }
+
+                if (metaData.hasBahmniForm2Mappings()) {
+                    processBahmniForm2Encounter(bahmniEncounter.getOpenMRSEncounter(), metaData, avniPatient);
                 }
             }
             avniBahmniErrorService.successfullyProcessed(bahmniEncounter.getOpenMRSEncounter());
@@ -92,7 +97,23 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
         }
     }
 
-    private void processDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) throws NoSubjectWithIdException, SubjectIdChangedException{
+    private void processBahmniForm2Encounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) throws NoSubjectWithIdException, SubjectIdChangedException {
+        Map<String, List<Map<String, Object>>> obsGroupedByForms2 = openMRSEncounter.getObsGroupedByForms2();
+        for (Map.Entry<String, List<Map<String, Object>>> entry : obsGroupedByForms2.entrySet()) {
+            String formName = entry.getKey();
+            List<Map<String, Object>> obsList = entry.getValue();
+            MappingMetaData mapping = metaData.getBahmniForm2MappingFor(formName);
+            if (mapping != null && mapping.getAvniValue() != null) {
+                logger.info("Processing Obs from Bahmni Form 2: " + formName);
+                processForm2Obs(openMRSEncounter, mapping.getAvniValue(), obsList, metaData, avniPatient);
+            } else {
+                logger.info(String.format("No Avni mapping found for Bahmni Form 2: %s", formName));
+            }
+        }
+
+    }
+
+    private void processDiagnosesEncounter(OpenMRSFullEncounter openMRSEncounter, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) throws NoSubjectWithIdException, SubjectIdChangedException {
         GeneralEncounter existingAvniEncounter = avniEncounterService.getDiagnosesGeneralEncounter(openMRSEncounter, metaData);
         if (existingAvniEncounter != null && avniPatient != null) {
             avniEncounterService.updateDiagnosesEncounter(openMRSEncounter, existingAvniEncounter, metaData, avniPatient);
@@ -102,8 +123,7 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
         } else if (existingAvniEncounter == null && avniPatient != null) {
             avniEncounterService.createDiagnosesEncounter(openMRSEncounter, metaData, avniPatient);
             logger.info("Created diagnoses encounter");
-        }
-        else if (existingAvniEncounter == null && avniPatient == null) {
+        } else if (existingAvniEncounter == null && avniPatient == null) {
             throw new NoSubjectWithIdException();
         }
     }
@@ -191,6 +211,21 @@ public class PatientEncounterEventWorker implements EventWorker, ErrorRecordWork
             throw new SubjectIdChangedException();
         } else if (existingAvniEncounter == null && avniPatient != null) {
             avniEncounterService.create(splitEncounter, metaData, avniPatient);
+            logger.info("Created general encounter");
+        } else if (existingAvniEncounter == null && avniPatient == null) {
+            throw new NoSubjectWithIdException();
+        }
+    }
+
+    private void processForm2Obs(OpenMRSFullEncounter openMRSFullEncounter, String avniEncounterType, List<Map<String, Object>> form2Obs, BahmniEncounterToAvniEncounterMetaData bahmniEncounterToAvniEncounterMetaData, GeneralEncounter avniPatient) throws SubjectIdChangedException, NoSubjectWithIdException {
+        GeneralEncounter existingAvniEncounter = avniEncounterService.getGeneralEncounterByEncounterType(avniEncounterType,openMRSFullEncounter.getUuid(), bahmniEncounterToAvniEncounterMetaData);
+        if (existingAvniEncounter != null && avniPatient != null) {
+            avniEncounterService.update(openMRSFullEncounter, existingAvniEncounter, form2Obs, metaData, avniPatient);
+            logger.info("Updated general encounter");
+        } else if (existingAvniEncounter != null && avniPatient == null) {
+            throw new SubjectIdChangedException();
+        } else if (existingAvniEncounter == null && avniPatient != null) {
+            avniEncounterService.create(openMRSFullEncounter, avniEncounterType, form2Obs, metaData, avniPatient);
             logger.info("Created general encounter");
         } else if (existingAvniEncounter == null && avniPatient == null) {
             throw new NoSubjectWithIdException();

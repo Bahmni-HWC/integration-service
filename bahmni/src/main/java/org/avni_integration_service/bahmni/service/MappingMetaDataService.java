@@ -74,6 +74,7 @@ public class MappingMetaDataService {
         metaData.setDiagnosesEncounterTypeMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.diagnosesEncounterType));
         metaData.setDiagnosesConceptMapping(mappingMetaDataRepository.findByMappingType(bahmniMappingType.diagnosesConcept));
         metaData.addProgramMapping(mappingMetaDataRepository.findAllByMappingGroupAndMappingType(bahmniMappingGroup.programEnrolment, bahmniMappingType.bahmniFormCommunityProgram));
+        metaData.setBahmniForm2Mappings(mappingMetaDataRepository.findAllByMappingType(bahmniMappingType.bahmniForm2Name));
         ArrayList<IgnoredIntegratingConcept> ignoredIntegratingConcepts = new ArrayList<>();
         ignoredBahmniConceptRepository.findAll().forEach(ignoredIntegratingConcepts::add);
         metaData.setIgnoredConcepts(ignoredIntegratingConcepts);

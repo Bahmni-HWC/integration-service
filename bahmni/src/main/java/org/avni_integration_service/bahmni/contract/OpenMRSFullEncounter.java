@@ -158,11 +158,9 @@ public class OpenMRSFullEncounter {
         String conceptUuid = (String) conceptNode.get("uuid");
         openMRSObservation.setConceptUuid(conceptUuid);
         openMRSObservation.setObsUuid((String) observation.get("uuid"));
-        if(isComplexObs(observation))
-        {
+        if (isComplexObs(observation)) {
             openMRSObservation.setValueComplex(getValueforComplexObs(observation));
-        }
-        else {
+        } else {
             Object value = observation.get("value");
             if (value instanceof Map) {
                 value = ((Map) value).get("uuid");
@@ -225,15 +223,14 @@ public class OpenMRSFullEncounter {
         }).collect(Collectors.toList());
     }
 
-    private String getDosingInstruction(Map<String, Object> drugOrder){
+    private String getDosingInstruction(Map<String, Object> drugOrder) {
         Map<String, Object> doseUnits = (Map<String, Object>) drugOrder.get("doseUnits");
         String dose = drugOrder.get("dose") == null ? "" : doseFormat.format(drugOrder.get("dose"));
-        if(drugOrder.get("frequency") != null){
+        if (drugOrder.get("frequency") != null) {
             Map<String, Object> frequency = (Map<String, Object>) drugOrder.get("frequency");
             return String.format("%s %s  %s", dose, doseUnits.get("display"), frequency.get("display"));
-        }
-        else{
-            Map<String, Object> dosingInstructions = ObjectJsonMapper.readValue((String) drugOrder.get("dosingInstructions"),Map.class);
+        } else {
+            Map<String, Object> dosingInstructions = ObjectJsonMapper.readValue((String) drugOrder.get("dosingInstructions"), Map.class);
             return String.format("%s-%s-%s %s", dosingInstructions.get("morningDose"), dosingInstructions.get("afternoonDose"), dosingInstructions.get("eveningDose"), doseUnits.get("display"));
         }
 
@@ -264,10 +261,10 @@ public class OpenMRSFullEncounter {
     //TODO: This should be handled in a better way by getting and validating against /bahmnicore/observations API
     private boolean isComplexObs(Map<String, Object> observation) {
         Object obsValue = observation.get("value");
-        return obsValue instanceof Map  && ((Map) obsValue).get("display").toString().equals("raw file");
+        return obsValue instanceof Map && ((Map) obsValue).get("display").toString().equals("raw file");
     }
 
-    private String getValueforComplexObs(Map<String, Object> observation){
+    private String getValueforComplexObs(Map<String, Object> observation) {
         String displayField = (String) observation.get("display");
         return displayField.split(":")[1].trim();
     }
@@ -275,6 +272,7 @@ public class OpenMRSFullEncounter {
     public boolean hasDiagnosesObs() {
         return getDiagnosesObs().size() != 0;
     }
+
     private List<Map<String, Object>> getDiagnosesObs() {
         List<Map<String, Object>> observations = (List<Map<String, Object>>) map.get("obs");
         return observations.stream().filter(observation -> {
@@ -287,9 +285,9 @@ public class OpenMRSFullEncounter {
         List<Map<String, Object>> diagnosesObs = getDiagnosesObs();
         List<String> diagnoses = new ArrayList<>();
         for (Map<String, Object> diagnosisObs : diagnosesObs) {
-            String diagnosis="";
-            String diagnosisOrder="";
-            String diagnosisCertainty="";
+            String diagnosis = "";
+            String diagnosisOrder = "";
+            String diagnosisCertainty = "";
             List<Map<String, Object>> groupMembers = (List<Map<String, Object>>) diagnosisObs.get("groupMembers");
             for (Map<String, Object> groupMember : groupMembers) {
                 Map<String, Object> conceptObj = (Map<String, Object>) groupMember.get("concept");
@@ -316,5 +314,30 @@ public class OpenMRSFullEncounter {
         } else {
             return obsValue.toString();
         }
+    }
+
+    public Map<String, List<Map<String, Object>>> getObsGroupedByForms2() {
+        List<Map<String, Object>> observations = (List<Map<String, Object>>) map.get("obs");
+        Map<String, List<Map<String, Object>>> obsGroupedByForms = new HashMap<>();
+        for (Map<String, Object> observation : observations) {
+            String formFieldPath = (String) observation.get("formFieldPath");
+            if (formFieldPath == null) continue;
+            String formName = getFormNameFromFormFieldPath(formFieldPath);
+            obsGroupedByForms.compute(formName, (key, value) -> {
+                if (value == null) {
+                    List<Map<String, Object>> newList = new ArrayList<>();
+                    newList.add(observation);
+                    return newList;
+                }
+                value.add(observation);
+                return value;
+            });
+        }
+        return obsGroupedByForms;
+    }
+
+    private String getFormNameFromFormFieldPath(String formFieldPath) {
+        String[] formFieldPathArray = formFieldPath.split("\\.");
+        return formFieldPathArray[0];
     }
 }
