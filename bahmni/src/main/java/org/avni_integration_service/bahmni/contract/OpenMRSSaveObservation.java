@@ -17,7 +17,10 @@ public class OpenMRSSaveObservation {
     private String valueCodedName;
     private String uuid;
     private boolean voided;
+    private String formFieldNamespace;
+    private String formFieldPath;
     private List<OpenMRSSaveObservation> groupMembers;
+    private static final String CHIEF_COMPLAINTS_CONCEPT_UUID = "9bb0795c-4ff0-0305-1990-000000000004";
 
     public OpenMRSSaveObservation() {
     }
@@ -30,10 +33,30 @@ public class OpenMRSSaveObservation {
         return openMRSSaveObservation;
     }
 
+    public static OpenMRSSaveObservation createVoidedObsWithMultipleGroupMember(String concept, String uuid, List<OpenMRSSaveObservation> groupMembers){
+        OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
+        openMRSSaveObservation.setUuid(uuid);
+        openMRSSaveObservation.concept = concept;
+        openMRSSaveObservation.groupMembers = groupMembers;
+        openMRSSaveObservation.setVoided(true);
+        return openMRSSaveObservation;
+    }
+
     public static OpenMRSSaveObservation createPrimitiveObs(String concept, Object value, ObsDataType dataType) {
         OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
         openMRSSaveObservation.concept = concept;
         openMRSSaveObservation.value = getValue(value, dataType);
+        return openMRSSaveObservation;
+    }
+
+    public static OpenMRSSaveObservation createPrimitiveObsWithMultipleGroupMember(String concept, List<OpenMRSSaveObservation> groupMembers ) {
+        OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
+        if(concept.equals(CHIEF_COMPLAINTS_CONCEPT_UUID)){
+            openMRSSaveObservation.setFormFieldNamespace("avni");
+            openMRSSaveObservation.setFormFieldPath("Chief Complaints");
+        }
+        openMRSSaveObservation.concept = concept;
+        openMRSSaveObservation.groupMembers = groupMembers;
         return openMRSSaveObservation;
     }
 
@@ -143,5 +166,21 @@ public class OpenMRSSaveObservation {
 
     public void setValueComplex(Object valueComplex) {
         this.valueComplex = valueComplex;
+    }
+
+    public String getFormFieldNamespace() {
+        return formFieldNamespace;
+    }
+
+    public void setFormFieldNamespace(String formFieldNamespace) {
+        this.formFieldNamespace = formFieldNamespace;
+    }
+
+    public String getFormFieldPath() {
+        return formFieldPath;
+    }
+
+    public void setFormFieldPath(String formFieldPath) {
+        this.formFieldPath = formFieldPath;
     }
 }

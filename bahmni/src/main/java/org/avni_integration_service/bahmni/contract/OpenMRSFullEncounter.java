@@ -83,12 +83,73 @@ public class OpenMRSFullEncounter {
     private void addLeafObservation(List<OpenMRSObservation> leafObservations, Map<String, Object> observation) {
         List<Map<String, Object>> groupMembers = (List<Map<String, Object>>) observation.get("groupMembers");
         if (groupMembers != null) {
-            groupMembers.forEach(groupMember -> addLeafObservation(leafObservations, groupMember));
+            for (Map<String, Object> groupMember : groupMembers) {
+                if (groupMember.get("groupMembers") instanceof List<?>) {
+                    OpenMRSObservation openMRSObservation = getOpenMRSObservationWithMultipleGroupMembers(groupMember);
+                    if (!openMRSObservation.isVoided()) {
+                        leafObservations.add(openMRSObservation);
+                    }
+                } else addLeafObservation(leafObservations, groupMember);
+            }
         } else {
             OpenMRSObservation openMRSObservation = getOpenMRSObservation(observation);
             if (!openMRSObservation.isVoided())
                 leafObservations.add(openMRSObservation);
         }
+    }
+    private OpenMRSObservation getOpenMRSObservationWithMultipleGroupMembers(Map<String, Object> observation) {
+        OpenMRSObservation openMRSObservation = new OpenMRSObservation();
+        Map<String, Object> conceptNode = (Map<String, Object>) observation.get("concept");
+        String conceptUuid = (String) conceptNode.get("uuid");
+        openMRSObservation.setConceptUuid(conceptUuid);
+        openMRSObservation.setObsUuid((String) observation.get("uuid"));
+        openMRSObservation.setVoided((Boolean) observation.get("voided"));
+        List<OpenMRSObservation> newGroupMembers = new ArrayList<>();
+
+        List<Map<String, Object>> groupMembers = (List<Map<String, Object>>) observation.get("groupMembers");
+        if (groupMembers != null) {
+            int groupMembersSize = groupMembers.size();
+
+            for (Map<String, Object> groupMember : groupMembers) {
+                OpenMRSObservation groupMemberObservationWithMultipleGroupMembers = new OpenMRSObservation();
+                while (groupMembersSize > 0) {
+                    if (groupMember.get("groupMembers") instanceof List<?>) {
+                        getOpenMRSObservationWithMultipleGroupMembers(groupMember);
+                    } else {
+                        Map<String, Object> conceptNode1 = (Map<String, Object>) groupMember.get("concept");
+                        String conceptUuid1 = (String) conceptNode1.get("uuid");
+                        groupMemberObservationWithMultipleGroupMembers.setConceptUuid(conceptUuid1);
+                        groupMemberObservationWithMultipleGroupMembers.setObsUuid((String) groupMember.get("uuid"));
+                        groupMemberObservationWithMultipleGroupMembers.setVoided((Boolean) groupMember.get("voided"));
+                        if (isComplexObs(groupMember)) {
+                            groupMemberObservationWithMultipleGroupMembers.setValueComplex(getValueforComplexObs(groupMember));
+                        } else {
+                            Object value = groupMember.get("value");
+                            if (value instanceof Map) {
+                                value = ((Map) value).get("uuid");
+                            }
+                            groupMemberObservationWithMultipleGroupMembers.setValue(value);
+                        }
+                        newGroupMembers.add(groupMemberObservationWithMultipleGroupMembers);
+                        groupMembersSize = groupMembersSize - 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        openMRSObservation.setGroupMembers(newGroupMembers);
+
+        if (isComplexObs(observation)) {
+            openMRSObservation.setValueComplex(getValueforComplexObs(observation));
+        } else {
+            Object value = observation.get("value");
+            if (value instanceof Map) {
+                value = ((Map) value).get("uuid");
+            }
+            openMRSObservation.setValue(value);
+        }
+        return openMRSObservation;
     }
 
     private OpenMRSObservation getOpenMRSObservation(Map<String, Object> observation) {
