@@ -134,15 +134,28 @@ public class PatientService {
 
         if (subject.getObservation("RCH ID") != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("RCH ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
+                    subject.getObservation("RCH ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
             ));
         }
 
         if (subject.getObservation("Nikshay ID") != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("Nikshay ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
+                    subject.getObservation("Nikshay ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
             ));
         }
+
+        if (subject.getObservation("ABHA Address") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("ABHA Address").toString(), "ada436db-0e3e-11ee-9960-0242ac150002", false
+            ));
+        }
+
+        if (subject.getObservation("ABHA Number") != null) {
+            identifiers.add(new OpenMRSSavePatientIdentifier(
+                    subject.getObservation("ABHA Number").toString(), "ada0b55b-0e3e-11ee-9960-0242ac150002", false
+            ));
+        }
+
         patient.setIdentifiers(identifiers);
 
         return openMRSPatientRepository.createPatient(patient);
