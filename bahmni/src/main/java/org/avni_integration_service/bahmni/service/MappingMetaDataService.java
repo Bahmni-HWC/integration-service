@@ -44,12 +44,13 @@ public class MappingMetaDataService {
     public SubjectToPatientMetaData getForSubjectToPatient() {
         MappingMetaData patientIdentifierMapping = mappingService.findByMappingGroupAndMappingType(bahmniMappingGroup.patientSubject, bahmniMappingType.patientIdentifierConcept);
         String avniIdentifierConcept = patientIdentifierMapping.getAvniValue();
+        MappingMetaDataCollection personAttributesMappingList = mappingService.findAll(bahmniMappingGroup.patientSubject, bahmniMappingType.personAttributeConcept);
 
         String encounterTypeUuid = mappingService.getBahmniValue(bahmniMappingGroup.patientSubject, bahmniMappingType.subjectEncounterType);
 
         String subjectUuidConceptUuid = mappingService.getBahmniValueForAvniIdConcept();
 
-        return new SubjectToPatientMetaData(avniIdentifierConcept, encounterTypeUuid, subjectUuidConceptUuid);
+        return new SubjectToPatientMetaData(avniIdentifierConcept, encounterTypeUuid, subjectUuidConceptUuid, personAttributesMappingList);
     }
 
     public PatientToSubjectMetaData getForPatientToSubject() {
