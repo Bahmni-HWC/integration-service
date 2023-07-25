@@ -113,13 +113,23 @@ public class PatientService {
 
         person.setAddresses(List.of(personAddress));
 
-        OpenMRSSavePersonAttributeType phoneNumberAttributeType = new OpenMRSSavePersonAttributeType("3a870d1d-4f0c-4348-8cab-84b0e265b4dd", "phoneNumber");
-        OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) subject.getObservation("Phone Number"));
+        List<OpenMRSSavePersonAttribute> attributes = new ArrayList<>();
 
-        OpenMRSSavePersonAttributeType fatherOrMotherNameAttributeType = new OpenMRSSavePersonAttributeType("021c8ef0-0c2a-11ee-be56-0242ac120002", "father/motherName");
-        OpenMRSSavePersonAttribute fatherOrMotherNameAttribute = new OpenMRSSavePersonAttribute(fatherOrMotherNameAttributeType, (String) subject.getObservation("Father/Mother's Name"));
+        String phoneNumberUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("Phone Number");
+        if (subject.getObservation("Phone Number") != null && phoneNumberUuid != null){
+            OpenMRSSavePersonAttributeType phoneNumberAttributeType = new OpenMRSSavePersonAttributeType(phoneNumberUuid, "phoneNumber");
+            OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) subject.getObservation("Phone Number"));
+            attributes.add(phoneNumberAttribute);
+        }
 
-        person.setAttributes(List.of(phoneNumberAttribute, fatherOrMotherNameAttribute));
+        String fatherOrMotherNameUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("Father/Mother's Name");
+        if (subject.getObservation("Father/Mother's Name") != null && fatherOrMotherNameUuid != null) {
+            OpenMRSSavePersonAttributeType fatherOrMotherNameAttributeType = new OpenMRSSavePersonAttributeType(fatherOrMotherNameUuid, "father/motherName");
+            OpenMRSSavePersonAttribute fatherOrMotherNameAttribute = new OpenMRSSavePersonAttribute(fatherOrMotherNameAttributeType, (String) subject.getObservation("Father/Mother's Name"));
+            attributes.add(fatherOrMotherNameAttribute);
+        }
+
+        person.setAttributes(attributes);
 
         OpenMRSUuidHolder uuidHolder = openMRSPersonRepository.createPerson(person);
         OpenMRSSavePatient patient = new OpenMRSSavePatient();
@@ -132,27 +142,31 @@ public class PatientService {
                 true
         ));
 
-        if (subject.getObservation("RCH ID") != null) {
+        String rchIdUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("RCH ID");
+        if (subject.getObservation("RCH ID") != null && rchIdUuid != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("RCH ID").toString(), "3766473c-0c29-11ee-be56-0242ac120002", false
+                    subject.getObservation("RCH ID").toString(), rchIdUuid, false
             ));
         }
 
-        if (subject.getObservation("Nikshay ID") != null) {
+        String nikshayIdUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("Nikshay ID");
+        if (subject.getObservation("Nikshay ID") != null && nikshayIdUuid != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("Nikshay ID").toString(), "45bcdf58-0c29-11ee-be56-0242ac120002", false
+                    subject.getObservation("Nikshay ID").toString(), nikshayIdUuid, false
             ));
         }
 
-        if (subject.getObservation("ABHA Address") != null) {
+        String abhaAddressUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("ABHA Address");
+        if (subject.getObservation("ABHA Address") != null && abhaAddressUuid != null){
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("ABHA Address").toString(), "ada436db-0e3e-11ee-9960-0242ac150002", false
+                    subject.getObservation("ABHA Address").toString(), abhaAddressUuid, false
             ));
         }
 
-        if (subject.getObservation("ABHA Number") != null) {
+        String abhaNumberUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("ABHA Number");
+        if (subject.getObservation("ABHA Number") != null && abhaAddressUuid != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
-                    subject.getObservation("ABHA Number").toString(), "ada0b55b-0e3e-11ee-9960-0242ac150002", false
+                    subject.getObservation("ABHA Number").toString(), abhaNumberUuid, false
             ));
         }
 
