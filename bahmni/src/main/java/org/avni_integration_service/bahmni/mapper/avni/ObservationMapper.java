@@ -239,6 +239,12 @@ public class ObservationMapper {
             Object value1 = e.getValue();
             if (keyString instanceof String) {
                 MappingMetaData answerMapping = conceptMappings.getMappingForAvniValue(keyString);
+                if(answerMapping.isCoded()){
+                    String codedValue = conceptMappings.getBahmniValueForAvniValue((String) value1);
+                    if(codedValue != null){
+                        value1 = codedValue;
+                    }
+                }
                 boolean isUnique = true;
                 for (OpenMRSSaveObservation groupMember : groupMembers) {
                     if (groupMember.getConcept().equals(answerMapping.getIntSystemValue())) {
