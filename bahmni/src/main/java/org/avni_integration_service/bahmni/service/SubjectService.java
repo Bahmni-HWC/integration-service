@@ -154,6 +154,21 @@ public class SubjectService {
             subject.addObservation("Nikshay ID", nikshayIdentifier.get().getIdentifier());
         }
 
+        String abhaNumberUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("ABHA Number");
+        Optional<OpenMRSPatientIdentifier> ABHANumberIdentifier = patient.getIdentifiers().stream()
+                .filter(id -> id.getIdentifierType().getUuid().equals(abhaNumberUuid)).findFirst();
+
+        if (ABHANumberIdentifier.isPresent()) {
+            subject.addObservation("ABHA Number", ABHANumberIdentifier.get().getIdentifier());
+        }
+
+        String abhaAddressUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("ABHA Address");
+        Optional<OpenMRSPatientIdentifier> ABHAAddressIdentifier = patient.getIdentifiers().stream().filter(id -> id.getIdentifierType().getUuid().equals(abhaAddressUuid)).findFirst();
+
+        if (ABHAAddressIdentifier.isPresent()) {
+            subject.addObservation("ABHA Address", ABHAAddressIdentifier.get().getIdentifier());
+        }
+
         String phoneNumber = patient.getPerson().getAttributes().getPhoneNumber();
 
         subject.addObservation("Phone Number", phoneNumber);
