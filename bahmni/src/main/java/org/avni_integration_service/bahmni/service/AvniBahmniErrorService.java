@@ -58,6 +58,7 @@ public class AvniBahmniErrorService {
             errorRecord.setEntityId(uuid);
             errorRecord.addErrorType(errorType);
             errorRecord.setProcessingDisabled(false);
+            errorRecord.setIntegrationSystem(integrationSystemRepository.findByName("bahmni"));
             errorRecordRepository.save(errorRecord);
         }
     }

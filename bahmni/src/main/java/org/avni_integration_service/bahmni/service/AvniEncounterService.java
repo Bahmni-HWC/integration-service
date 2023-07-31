@@ -6,9 +6,12 @@ import org.avni_integration_service.avni.domain.Subject;
 import org.avni_integration_service.avni.repository.AvniEncounterRepository;
 import org.avni_integration_service.bahmni.BahmniEncounterToAvniEncounterMetaData;
 import org.avni_integration_service.bahmni.BahmniErrorType;
+import org.avni_integration_service.bahmni.SubjectToPatientMetaData;
 import org.avni_integration_service.bahmni.contract.OpenMRSDefaultEncounter;
 import org.avni_integration_service.bahmni.contract.OpenMRSFullEncounter;
+import org.avni_integration_service.bahmni.contract.OpenMRSInventoryDispenseRequest;
 import org.avni_integration_service.bahmni.contract.OpenMRSPatient;
+import org.avni_integration_service.bahmni.mapper.DispenseRequestMapper;
 import org.avni_integration_service.bahmni.mapper.OpenMRSEncounterMapper;
 import org.avni_integration_service.bahmni.mapper.avni.EncounterMapper;
 import org.avni_integration_service.bahmni.repository.BahmniSplitEncounter;
@@ -20,6 +23,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.avni_integration_service.bahmni.constants.DispenseConstants.AVNI_DISPENSE_ENCOUNTER_TYPE;
+import static org.avni_integration_service.bahmni.constants.DispenseConstants.AVNI_DISPENSE_QUESTION_GROUP_NAME;
 
 @Service
 public class AvniEncounterService extends BaseAvniEncounterService {
@@ -35,18 +41,24 @@ public class AvniEncounterService extends BaseAvniEncounterService {
 
     private final AvniBahmniErrorService avniBahmniErrorService;
 
+    private final DispenseRequestMapper dispenseRequestMapper;
+
+    private final OpenMRSInventoryService openMRSInventoryService;
+
     private static final Logger logger = Logger.getLogger(AvniEncounterService.class);
 
     @Autowired
-    public AvniEncounterService(PatientService patientService, OpenMRSEncounterRepository openMRSEncounterRepository, OpenMRSEncounterMapper openMRSEncounterMapper, AvniEncounterRepository avniEncounterRepository, PatientService patientService1, MappingService mappingService, OpenMRSEncounterRepository openMRSEncounterRepository1, EncounterMapper encounterMapper, VisitService visitService, AvniBahmniErrorService avniBahmniErrorService) {
+    public AvniEncounterService(PatientService patientService, OpenMRSEncounterRepository openMRSEncounterRepository, OpenMRSEncounterMapper openMRSEncounterMapper, AvniEncounterRepository avniEncounterRepository, PatientService patientService1, MappingService mappingService, OpenMRSEncounterRepository openMRSEncounterRepository1, EncounterMapper encounterMapper, VisitService visitService, AvniBahmniErrorService avniBahmniErrorService, DispenseRequestMapper dispenseRequestMapper, OpenMRSInventoryService openMRSInventoryService) {
         super(patientService, mappingService, openMRSEncounterRepository);
         this.openMRSEncounterMapper = openMRSEncounterMapper;
         this.avniEncounterRepository = avniEncounterRepository;
+        this.openMRSInventoryService = openMRSInventoryService;
         this.mappingService = mappingService;
         this.openMRSEncounterRepository = openMRSEncounterRepository1;
         this.encounterMapper = encounterMapper;
         this.visitService = visitService;
         this.avniBahmniErrorService = avniBahmniErrorService;
+        this.dispenseRequestMapper = dispenseRequestMapper;
     }
 
     public void update(BahmniSplitEncounter bahmniSplitEncounter, GeneralEncounter existingAvniEncounter, BahmniEncounterToAvniEncounterMetaData bahmniEncounterToAvniEncounterMetaData, GeneralEncounter avniPatient) {
@@ -175,5 +187,31 @@ public class AvniEncounterService extends BaseAvniEncounterService {
     public void update(OpenMRSFullEncounter openMRSFullEncounter, GeneralEncounter existingAvniEncounter, List<Map<String, Object>> form2Obs, BahmniEncounterToAvniEncounterMetaData metaData, GeneralEncounter avniPatient) {
         GeneralEncounter encounter = openMRSEncounterMapper.mapToAvniEncounter(openMRSFullEncounter, existingAvniEncounter.getEncounterType(), form2Obs, metaData, avniPatient);
         avniEncounterRepository.update(existingAvniEncounter.getUuid(), encounter);
+    }
+
+    public boolean isDispenseEncounter(GeneralEncounter generalEncounter) {
+        return generalEncounter.getEncounterType().equals(AVNI_DISPENSE_ENCOUNTER_TYPE);
+    }
+
+    public void processDispenseEncounter(GeneralEncounter generalEncounter, SubjectToPatientMetaData metaData, Constants constants, Subject subject) {
+        OpenMRSPatient openMRSPatient = patientService.findPatient(subject, constants, metaData);
+        if (openMRSPatient == null) {
+            processPatientNotFound(generalEncounter);
+            return;
+        }
+        List<Map<String, Object>> avniDispenseObservations = (List<Map<String, Object>>) generalEncounter.getObservations().get(AVNI_DISPENSE_QUESTION_GROUP_NAME);
+        if (avniDispenseObservations == null) {
+            logger.info(String.format("Skipping dispense encounter %s as it does not have any dispense observations", generalEncounter.getUuid()));
+            return;
+        }
+        try {
+            OpenMRSInventoryDispenseRequest openMRSInventoryDispenseRequest = dispenseRequestMapper.mapToOpenMRSInventoryDispenseRequest(openMRSPatient.getUuid(), subject.getCatchments().get(0), avniDispenseObservations);
+            openMRSInventoryService.dispense(openMRSInventoryDispenseRequest);
+            avniBahmniErrorService.successfullyProcessed(generalEncounter);
+        } catch (Exception e) {
+            logger.error(String.format("Error while processing dispense encounter %s", generalEncounter.getUuid()), e);
+            avniBahmniErrorService.errorOccurred(generalEncounter, BahmniErrorType.DispenseError);
+        }
+
     }
 }

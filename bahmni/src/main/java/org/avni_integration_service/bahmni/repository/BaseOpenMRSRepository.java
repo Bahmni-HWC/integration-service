@@ -71,4 +71,8 @@ public abstract class BaseOpenMRSRepository {
         String newContent = content.replace("bahmnicore/bahmniencounter", "encounter");
         return newContent.replace("?includeAll=true", "?v=full");
     }
+
+    protected String getUrlPrefix() {
+        return urlPrefix;
+    }
 }
