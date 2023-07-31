@@ -37,6 +37,8 @@ public class MappingMetaDataService {
         this.bahmniMappingType = bahmniMappingType;
         this.bahmniEncounterMappingTypes = new MappingType[]{bahmniMappingType.encounterType,
                 bahmniMappingType.drugOrderEncounterType,
+                bahmniMappingType.diagnosesEncounterType,
+                bahmniMappingType.bahmniForm2Name,
                 bahmniMappingType.labEncounterType};
     }
 

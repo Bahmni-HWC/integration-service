@@ -1,8 +1,11 @@
 package org.avni_integration_service.bahmni.contract;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchResults<T> {
     private List<T> results;
 

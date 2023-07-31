@@ -96,7 +96,7 @@ public class GeneralEncounterWorker implements ErrorRecordWorker {
             return;
         }
 
-        if(!mappingMetaDataService.isBahmniEncounterMappingDefined(generalEncounter.getEncounterType())){
+        if(!mappingMetaDataService.isBahmniEncounterMappingDefined(generalEncounter.getEncounterType()) && !encounterService.isDispenseEncounter(generalEncounter)){
             logger.debug(String.format("Skipping Avni general encounter of type %s because it is not mapped to Bahmni", generalEncounter.getEncounterType()));
             updateSyncStatus(generalEncounter, updateSyncStatus);
             return;
@@ -124,6 +124,14 @@ public class GeneralEncounterWorker implements ErrorRecordWorker {
             updateSyncStatus(generalEncounter, updateSyncStatus);
             return;
         }
+
+        if(encounterService.isDispenseEncounter(generalEncounter)){
+            logger.debug(String.format("Processing dispense encounter: %s", generalEncounter.getUuid()));
+            encounterService.processDispenseEncounter(generalEncounter,metaData,constants,subject);
+            updateSyncStatus(generalEncounter, updateSyncStatus);
+            return;
+        }
+
         Pair<OpenMRSPatient, OpenMRSFullEncounter> patientEncounter = encounterService.findCommunityEncounter(generalEncounter, subject, constants, metaData);
         var patient = patientEncounter.getValue0();
         var encounter = patientEncounter.getValue1();
