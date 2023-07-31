@@ -58,7 +58,8 @@ public class MappingMetaDataService {
         String patientEncounterType = Names.AvniPatientRegistrationEncounter;
         String patientIdentifierName = mappingService.getBahmniValue(bahmniMappingGroup.patientSubject, bahmniMappingType.patientIdentifierConcept);
         String bahmniEntityUuidConceptInAvni = mappingService.getAvniValue(bahmniMappingGroup.common, bahmniMappingType.bahmniUUIDConcept);
-        return new PatientToSubjectMetaData(bahmniEntityUuidConceptInAvni, avniIdentifierConcept, patientEncounterType, patientIdentifierName);
+        MappingMetaDataCollection personAttributesMappingList = mappingService.findAll(bahmniMappingGroup.patientSubject, bahmniMappingType.personAttributeConcept);
+        return new PatientToSubjectMetaData(bahmniEntityUuidConceptInAvni, avniIdentifierConcept, patientEncounterType, patientIdentifierName, personAttributesMappingList);
     }
 
     public BahmniEncounterToAvniEncounterMetaData getForBahmniEncounterToAvniEntities() {

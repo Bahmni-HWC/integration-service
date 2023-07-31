@@ -5,13 +5,15 @@ public final class PatientToSubjectMetaData implements BahmniToAvniMetaData {
     private final String avniIdentifierConcept;
     private final String patientEncounterType;
     private final String patientIdentifierName;
+    private final MappingMetaDataCollection personAttributesMappingList;
 
     public PatientToSubjectMetaData(String bahmniEntityUuidConcept, String avniIdentifierConcept,
-                                    String patientEncounterType, String patientIdentifierName) {
+                                    String patientEncounterType, String patientIdentifierName,MappingMetaDataCollection personAttributesMappingList) {
         this.bahmniEntityUuidConcept = bahmniEntityUuidConcept;
         this.avniIdentifierConcept = avniIdentifierConcept;
         this.patientEncounterType = patientEncounterType;
         this.patientIdentifierName = patientIdentifierName;
+        this.personAttributesMappingList = personAttributesMappingList;
     }
 
     @Override
@@ -33,5 +35,9 @@ public final class PatientToSubjectMetaData implements BahmniToAvniMetaData {
 
     public String patientIdentifierName() {
         return patientIdentifierName;
+    }
+
+    public MappingMetaDataCollection getPersonAttributesMappingList() {
+        return personAttributesMappingList;
     }
 }
