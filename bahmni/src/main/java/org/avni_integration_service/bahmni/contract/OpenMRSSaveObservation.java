@@ -20,7 +20,7 @@ public class OpenMRSSaveObservation {
     private String formFieldNamespace;
     private String formFieldPath;
     private List<OpenMRSSaveObservation> groupMembers;
-    private static final String CHIEF_COMPLAINTS_CONCEPT_UUID = "9bb0795c-4ff0-0305-1990-000000000004";
+    private static final String CHIEF_COMPLAINTS_CONCEPT_UUID = "da47a35d-5806-48b7-b467-e29902759491";
 
     public OpenMRSSaveObservation() {
     }
