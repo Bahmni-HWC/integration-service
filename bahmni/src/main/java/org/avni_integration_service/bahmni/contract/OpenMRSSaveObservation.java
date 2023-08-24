@@ -20,7 +20,6 @@ public class OpenMRSSaveObservation {
     private String formFieldNamespace;
     private String formFieldPath;
     private List<OpenMRSSaveObservation> groupMembers;
-    private static final String CHIEF_COMPLAINTS_CONCEPT_UUID = "da47a35d-5806-48b7-b467-e29902759491";
 
     public OpenMRSSaveObservation() {
     }
@@ -51,10 +50,7 @@ public class OpenMRSSaveObservation {
 
     public static OpenMRSSaveObservation createPrimitiveObsWithMultipleGroupMember(String concept, List<OpenMRSSaveObservation> groupMembers ) {
         OpenMRSSaveObservation openMRSSaveObservation = new OpenMRSSaveObservation();
-        if(concept.equals(CHIEF_COMPLAINTS_CONCEPT_UUID)){
-            openMRSSaveObservation.setFormFieldNamespace("avni");
-            openMRSSaveObservation.setFormFieldPath("Chief Complaints");
-        }
+
         openMRSSaveObservation.concept = concept;
         openMRSSaveObservation.groupMembers = groupMembers;
         return openMRSSaveObservation;
