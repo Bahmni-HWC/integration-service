@@ -59,7 +59,7 @@ public class OpenMRSVisitRepository extends BaseOpenMRSRepository {
 
     private boolean isVisitForGivenDate(OpenMRSVisit visit, Date date){
         Date visitStartDateTime = visit.getStartDatetime();
-        return date.after(visitStartDateTime) && date.before(FormatAndParseUtil.getEndOfDayDate(date));
+        return (date.equals(visitStartDateTime) || date.after(visitStartDateTime)) && date.before(FormatAndParseUtil.getEndOfDayDate(date));
     }
 
     public void updateVisitStopDateTime(String visitUuid, Date stopDate) {

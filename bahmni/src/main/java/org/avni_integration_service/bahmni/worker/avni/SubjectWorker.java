@@ -114,9 +114,6 @@ public class SubjectWorker implements ErrorRecordWorker {
             } else if (encounter != null && patient == null) {
                 // product-roadmap-todo: openmrs doesn't support the ability to find encounter without providing the patient hence this condition will never be reached
                 patientService.processPatientIdChanged(subject, metaData);
-            } else if (encounter == null && patient != null) {
-                logger.debug(String.format("Creating new encounter for subject %s", subject.getUuid()));
-                patientService.createSubject(subject, patient, metaData, constants);
             } else if (encounter == null && patient == null) {
                 logger.debug(String.format("Creating new patient and new encounter for subject %s", subject.getUuid()));
                 patientService.createPatientAndSubject(subject, metaData, constants);
