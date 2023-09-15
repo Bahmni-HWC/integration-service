@@ -27,7 +27,7 @@ public class SubjectService {
     private final BahmniMappingGroup bahmniMappingGroup;
     private final BahmniMappingType bahmniMappingType;
 
-    private final Map<String, String> genderMap = Map.of("M","Male", "F", "Female", "O", "Others");
+    private final Map<String, String> genderMap = Map.of("M","Male", "F", "Female", "O", "Other");
 
     public SubjectService(AvniEncounterRepository avniEncounterRepository, AvniSubjectRepository avniSubjectRepository,
                           MappingService mappingService, AvniBahmniErrorService avniBahmniErrorService,
@@ -129,7 +129,7 @@ public class SubjectService {
 
         //set gender
         String genderString = genderMap.get(patient.getPerson().getGender());
-        subject.setGender(genderString != null ? genderString : patient.getPerson().getGender());
+        subject.setGender(genderString != null ? genderString : "Other");
 
         Optional<OpenMRSPatientIdentifier> identifier = patient.getIdentifiers().stream().filter(id -> id.isPreferred()).findFirst();
         subject.setExternalId(patient.getUuid());
