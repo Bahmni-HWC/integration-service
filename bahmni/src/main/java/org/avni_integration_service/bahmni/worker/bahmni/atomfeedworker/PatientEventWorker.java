@@ -45,6 +45,11 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
     @Value("${bahmni.app.first.run}")
     private boolean isFirstRun;
 
+    @Value("${bahmni.avni.address.knownStates}")
+    private String knownStates;
+
+    @Value("${bahmni.avni.address.knownDistricts}")
+    private String knownDistricts;
     @Value("${bahmni.avni.address.knownSubDistricts}")
     private String knownSubDistricts;
 
@@ -107,11 +112,21 @@ public class PatientEventWorker implements EventWorker, ErrorRecordWorker {
             logger.error("Can not sync patients to Avni. Patient Address is null");
             return false;
         }
+        String state = patient.getPerson().getPreferredAddress().getStateProvince();
+        String district = patient.getPerson().getPreferredAddress().getCountyDistrict();
         String subDistrict = patient.getPerson().getPreferredAddress().getAddress4();
         String village = patient.getPerson().getPreferredAddress().getCityVillage();
 
+        List<String> knownStateList = Arrays.asList(knownStates.split(","));
+        List<String> knownDistrictList = Arrays.asList(knownDistricts.split(","));
         List<String> knownSubDistrictList = Arrays.asList(knownSubDistricts.split(","));
         List<String> knownVillageList = Arrays.asList(knownVillages.split(","));
+        if (state == null || !knownStateList.contains(state.toUpperCase().trim())) {
+            return false;
+        }
+        if (district == null || !knownDistrictList.contains(district.toUpperCase().trim())) {
+            return false;
+        }
         if (subDistrict == null || !knownSubDistrictList.contains(subDistrict.toUpperCase().trim())) {
             return false;
         }
