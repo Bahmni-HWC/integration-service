@@ -182,4 +182,17 @@ public class SubjectService {
 //        subject.addObservation("Target Community", arrayOfTCs);
         return createdSubject;
     }
+
+    public Subject updateSubjectObservations(String subjectUuid, Map<String, Object> observations,Constants constants) {
+        try{
+            Subject subject = new Subject();
+            subject.setUuid(subjectUuid);
+            subject.setSubjectType(constants.getValue(ConstantKey.IntegrationAvniSubjectType.name()));
+            subject.setObservations(observations);
+            return avniSubjectRepository.patch(subject);
+        }
+        catch (Exception e){
+            throw new RuntimeException("Error while updating subject with uuid " + subjectUuid, e);
+        }
+    }
 }

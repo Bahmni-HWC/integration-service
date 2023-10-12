@@ -30,7 +30,7 @@ public class AvniHttpClient {
         avniSessions.set(avniSession);
     }
 
-    AvniSession getAvniSession() {
+    public AvniSession getAvniSession() {
         AvniSession avniSession = avniSessions.get();
         if (avniSession == null)
             throw new IllegalStateException("No Avni connection available. Have you called setAvniConnectionDetails.");
@@ -89,6 +89,20 @@ public class AvniHttpClient {
         }
     }
 
+    public <T, U> ResponseEntity<U> patch(String url, T requestBody, Class<U> returnType) {
+        logger.info(String.format("PATCH: %s", url));
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(getAvniSession().apiUrl(url));
+        try {
+            return restTemplate.exchange(builder.build().toUri(), HttpMethod.PATCH, new HttpEntity<>(requestBody, authHeaders()), returnType);
+        } catch (HttpServerErrorException.InternalServerError e) {
+            if (e.getMessage().contains("TokenExpiredException")) {
+                getAvniSession().clearAuthInformation();
+                return restTemplate.exchange(builder.build().toUri(), HttpMethod.PATCH, new HttpEntity<>(requestBody, authHeaders()), returnType);
+            }
+            throw e;
+        }
+    }
+
     public <T> ResponseEntity<T> delete(String url,  Map<String, String> queryParams, String json, Class<T> returnType) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(getAvniSession().apiUrl(url));
         try {
@@ -116,7 +130,7 @@ public class AvniHttpClient {
         return headers;
     }
 
-    String fetchAuthToken() {
+    public String fetchAuthToken() {
         String idToken = getAvniSession().getIdToken();
         if (idToken != null) return idToken;
 
@@ -125,6 +139,10 @@ public class AvniHttpClient {
         ResponseEntity<IdpDetailsResponse> response = restTemplate.getForEntity(getAvniSession().apiUrl("/idp-details"), IdpDetailsResponse.class);
         IdpDetailsResponse idpDetailsResponse = response.getBody();
         return getAvniSession().fetchIdToken(idpDetailsResponse);
+    }
+
+    public void clearAuthInformation() {
+        getAvniSession().clearAuthInformation();
     }
 
     public String getUri(String url, HashMap<String, String> queryParams) {

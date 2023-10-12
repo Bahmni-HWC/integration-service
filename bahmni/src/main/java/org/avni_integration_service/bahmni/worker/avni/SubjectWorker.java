@@ -9,8 +9,10 @@ import org.avni_integration_service.avni.worker.ErrorRecordWorker;
 import org.avni_integration_service.bahmni.BahmniErrorType;
 import org.avni_integration_service.bahmni.ConstantKey;
 import org.avni_integration_service.bahmni.SubjectToPatientMetaData;
+import org.avni_integration_service.bahmni.contract.CreateABHASuccessResponse;
 import org.avni_integration_service.bahmni.contract.OpenMRSFullEncounter;
 import org.avni_integration_service.bahmni.contract.OpenMRSPatient;
+import org.avni_integration_service.bahmni.exceptions.ABHACreationFailedException;
 import org.avni_integration_service.bahmni.service.*;
 import org.avni_integration_service.bahmni.worker.bahmni.atomfeedworker.PatientEncounterEventWorker;
 import org.avni_integration_service.integration_data.domain.AvniEntityType;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -45,6 +48,9 @@ public class SubjectWorker implements ErrorRecordWorker {
     private AvniIgnoredConceptsRepository avniIgnoredConceptsRepository;
     @Autowired
     private SubjectService subjectService;
+
+    @Autowired
+    private ABHAService abhaService;
 
     private static final Logger logger = Logger.getLogger(SubjectWorker.class);
     private SubjectToPatientMetaData metaData;
@@ -82,6 +88,36 @@ public class SubjectWorker implements ErrorRecordWorker {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected void processSubject(Subject subject, boolean updateSyncStatus) {
         logger.debug("Processing subject %s".formatted(subject.getUuid()));
+
+        if (hasAadhaarNumber(subject)) {
+            Map<String, Object> updatedSubjectObservations = new HashMap<>();
+
+            try {
+                logger.info("Initiating ABHA Creation with Aadhaar Demographics for subject %s".formatted(subject.getId(metaData.avniIdentifierConcept())));
+                CreateABHASuccessResponse createABHASuccessResponse = abhaService.createABHA(subject);
+                if (abhaService.isABHAAddressLinkedAlready(createABHASuccessResponse.getHealthId())) {
+                    logger.info("ABHA Address %s is already linked to another Patient. Skipping ABHA mapping for %s".formatted(createABHASuccessResponse.getHealthId(), subject.getId(metaData.avniIdentifierConcept())));
+                    updatedSubjectObservations.put("ABHA Creation Error", String.format("ABHA Address %s is already linked to another Patient", createABHASuccessResponse.getHealthId()));
+                } else {
+                    logger.info("ABHA Creation with Aadhaar Demographics successful for subject %s".formatted(subject.getId(metaData.avniIdentifierConcept())));
+                    updatedSubjectObservations.put("ABHA Number", createABHASuccessResponse.getHealthIdNumber());
+                    updatedSubjectObservations.put("ABHA Address", createABHASuccessResponse.getHealthId());
+                    updatedSubjectObservations.put("ABHA Creation Error", null);
+                }
+
+            } catch (ABHACreationFailedException e) {
+                logger.error("ABHA Creation with demographics failed for subject %s \n %s".formatted(subject.getId(metaData.avniIdentifierConcept()), e.getMessage()));
+                updatedSubjectObservations.put("ABHA Creation Error", e.getMessage());
+            } catch (Exception e) {
+                logger.error("ABHA Creation with demographics failed for subject %s \n %s".formatted(subject.getId(metaData.avniIdentifierConcept()), e.getMessage()));
+                updatedSubjectObservations.put("ABHA Creation Error", "Internal Server Error");
+            } finally {
+                logger.info("Updating Avni subject %s after ABHA processing".formatted(subject.getId(metaData.avniIdentifierConcept())));
+                updatedSubjectObservations.put("Aadhaar Number", null);
+                subject = subjectService.updateSubjectObservations(subject.getUuid(), updatedSubjectObservations, constants);
+
+            }
+        }
 
         if (subject.getId(metaData.avniIdentifierConcept()) == null) {
             logger.debug("Skip subject %s because of having null identifier".formatted(subject.getUuid()));
@@ -157,5 +193,9 @@ public class SubjectWorker implements ErrorRecordWorker {
     public void cacheRunImmutables(Constants constants) {
         this.constants = constants;
         metaData = mappingMetaDataService.getForSubjectToPatient();
+    }
+
+    private boolean hasAadhaarNumber(Subject subject) {
+        return subject.getObservations().get("Aadhaar Number") != null && !subject.getObservations().get("Aadhaar Number").toString().isBlank();
     }
 }

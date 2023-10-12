@@ -120,4 +120,12 @@ public class Subject extends AvniBaseContract {
         Object catchments = map.get(CatchmentsFieldName);
         return catchments == null ? null : (List<String>) catchments;
     }
+    @JsonIgnore
+    public String getFullName() {
+        if (getMiddleName() == null || getMiddleName().isEmpty()) {
+            return (getFirstName() + " " + getLastName()).trim();
+        } else {
+            return (getFirstName() + " " + getMiddleName() + " " + getLastName()).trim();
+        }
+    }
 }
