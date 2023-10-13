@@ -1,13 +1,16 @@
 package org.avni_integration_service.avni.client;
 
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.avni_integration_service.avni.domain.auth.IdpDetailsResponse;
 import org.avni_integration_service.util.ObjectJsonMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -19,12 +22,19 @@ import java.util.Map;
 
 @Component
 public class AvniHttpClient {
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     private static final Logger logger = Logger.getLogger(AvniHttpClient.class);
 
     private static ThreadLocal<AvniSession> avniSessions = new ThreadLocal<>();
+
+    public AvniHttpClient(RestTemplate restTemplate) {
+        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClients.custom()
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setCookieSpec(CookieSpecs.STANDARD).build())
+                .build()));
+        this.restTemplate = restTemplate;
+    }
 
     public void setAvniSession(AvniSession avniSession) {
         avniSessions.set(avniSession);
