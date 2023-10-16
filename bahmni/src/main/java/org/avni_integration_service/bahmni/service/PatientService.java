@@ -44,6 +44,7 @@ public class PatientService {
         if (subject.getVoided()) {
             openMRSEncounterRepository.voidEncounter(existingEncounter);
         } else {
+            openMRSPatientRepository.updatePatientIdentifiers(mapExtraIdentifiers(subject, subjectToPatientMetaData, constants), patient.getUuid());
             OpenMRSEncounter encounter = subjectMapper.mapSubjectToExistingEncounter(existingEncounter, subject, patient.getUuid(), subjectToPatientMetaData.encounterTypeUuid(), constants);
             openMRSEncounterRepository.updateEncounter(encounter);
             avniBahmniErrorService.successfullyProcessed(subject);
