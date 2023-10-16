@@ -141,7 +141,15 @@ public class PatientService {
                 constants.getValue(ConstantKey.IntegrationBahmniIdentifierType.name()),
                 true
         ));
+        identifiers.addAll(mapExtraIdentifiers(subject, metaData, constants));
+        patient.setIdentifiers(identifiers);
 
+        return openMRSPatientRepository.createPatient(patient);
+    }
+
+    private List<OpenMRSSavePatientIdentifier> mapExtraIdentifiers(Subject subject, SubjectToPatientMetaData metaData, Constants constants) {
+
+        List<OpenMRSSavePatientIdentifier> identifiers = new ArrayList<>();
         String rchIdUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("RCH ID");
         if (subject.getObservation("RCH ID") != null && rchIdUuid != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
@@ -157,7 +165,7 @@ public class PatientService {
         }
 
         String abhaAddressUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("ABHA Address");
-        if (subject.getObservation("ABHA Address") != null && abhaAddressUuid != null){
+        if (subject.getObservation("ABHA Address") != null && abhaAddressUuid != null) {
             identifiers.add(new OpenMRSSavePatientIdentifier(
                     subject.getObservation("ABHA Address").toString(), abhaAddressUuid, false
             ));
@@ -169,10 +177,8 @@ public class PatientService {
                     subject.getObservation("ABHA Number").toString(), abhaNumberUuid, false
             ));
         }
+        return identifiers;
 
-        patient.setIdentifiers(identifiers);
-
-        return openMRSPatientRepository.createPatient(patient);
     }
 
     //    doesn't work
