@@ -1,13 +1,16 @@
 package org.avni_integration_service.avni.client;
 
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.avni_integration_service.avni.domain.auth.IdpDetailsResponse;
 import org.avni_integration_service.util.ObjectJsonMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -19,18 +22,25 @@ import java.util.Map;
 
 @Component
 public class AvniHttpClient {
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     private static final Logger logger = Logger.getLogger(AvniHttpClient.class);
 
     private static ThreadLocal<AvniSession> avniSessions = new ThreadLocal<>();
 
+    public AvniHttpClient(RestTemplate restTemplate) {
+        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClients.custom()
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setCookieSpec(CookieSpecs.STANDARD).build())
+                .build()));
+        this.restTemplate = restTemplate;
+    }
+
     public void setAvniSession(AvniSession avniSession) {
         avniSessions.set(avniSession);
     }
 
-    AvniSession getAvniSession() {
+    public AvniSession getAvniSession() {
         AvniSession avniSession = avniSessions.get();
         if (avniSession == null)
             throw new IllegalStateException("No Avni connection available. Have you called setAvniConnectionDetails.");
@@ -89,6 +99,20 @@ public class AvniHttpClient {
         }
     }
 
+    public <T, U> ResponseEntity<U> patch(String url, T requestBody, Class<U> returnType) {
+        logger.info(String.format("PATCH: %s", url));
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(getAvniSession().apiUrl(url));
+        try {
+            return restTemplate.exchange(builder.build().toUri(), HttpMethod.PATCH, new HttpEntity<>(requestBody, authHeaders()), returnType);
+        } catch (HttpServerErrorException.InternalServerError e) {
+            if (e.getMessage().contains("TokenExpiredException")) {
+                getAvniSession().clearAuthInformation();
+                return restTemplate.exchange(builder.build().toUri(), HttpMethod.PATCH, new HttpEntity<>(requestBody, authHeaders()), returnType);
+            }
+            throw e;
+        }
+    }
+
     public <T> ResponseEntity<T> delete(String url,  Map<String, String> queryParams, String json, Class<T> returnType) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(getAvniSession().apiUrl(url));
         try {
@@ -116,7 +140,7 @@ public class AvniHttpClient {
         return headers;
     }
 
-    String fetchAuthToken() {
+    public String fetchAuthToken() {
         String idToken = getAvniSession().getIdToken();
         if (idToken != null) return idToken;
 
@@ -125,6 +149,10 @@ public class AvniHttpClient {
         ResponseEntity<IdpDetailsResponse> response = restTemplate.getForEntity(getAvniSession().apiUrl("/idp-details"), IdpDetailsResponse.class);
         IdpDetailsResponse idpDetailsResponse = response.getBody();
         return getAvniSession().fetchIdToken(idpDetailsResponse);
+    }
+
+    public void clearAuthInformation() {
+        getAvniSession().clearAuthInformation();
     }
 
     public String getUri(String url, HashMap<String, String> queryParams) {

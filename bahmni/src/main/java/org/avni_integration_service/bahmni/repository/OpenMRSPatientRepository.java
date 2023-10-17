@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.avni_integration_service.bahmni.client.OpenMRSWebClient;
 import org.avni_integration_service.bahmni.contract.OpenMRSPatient;
 import org.avni_integration_service.bahmni.contract.OpenMRSSavePatient;
+import org.avni_integration_service.bahmni.contract.OpenMRSSavePatientIdentifier;
 import org.avni_integration_service.bahmni.contract.SearchResults;
 import org.avni_integration_service.util.ObjectJsonMapper;
 import org.ict4h.atomfeed.client.domain.Event;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.List;
 
 @Component
 public class OpenMRSPatientRepository extends BaseOpenMRSRepository {
@@ -41,5 +43,14 @@ public class OpenMRSPatientRepository extends BaseOpenMRSRepository {
     public OpenMRSPatient getPatient(String patientUuid) {
         String patientJSON = openMRSWebClient.get(URI.create(String.format("%s/%s/patient/%s?v=full", urlPrefix, BaseOpenMRSRepository.OPENMRS_BASE_PATH, patientUuid)));
         return ObjectJsonMapper.readValue(patientJSON, OpenMRSPatient.class);
+    }
+
+    public void updatePatientIdentifiers(List<OpenMRSSavePatientIdentifier> identifiers, String patientUuid) {
+        for (OpenMRSSavePatientIdentifier identifier : identifiers
+        ) {
+            String json = ObjectJsonMapper.writeValueAsString(identifier);
+            openMRSWebClient.post(String.format("%s/identifier", getSingleResourcePath("patient", patientUuid)), json);
+        }
+
     }
 }
