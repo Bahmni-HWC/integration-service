@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PatientService {
@@ -119,7 +120,8 @@ public class PatientService {
         String phoneNumberUuid = metaData.getPersonAttributesMappingList().getBahmniValueForAvniValue("Phone Number");
         if (subject.getObservation("Phone Number") != null && phoneNumberUuid != null){
             OpenMRSSavePersonAttributeType phoneNumberAttributeType = new OpenMRSSavePersonAttributeType(phoneNumberUuid, "phoneNumber");
-            OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) subject.getObservation("Phone Number"));
+            Map<String, Object> phoneNumberObs =  (Map<String, Object>) subject.getObservation("Phone Number");
+            OpenMRSSavePersonAttribute phoneNumberAttribute = new OpenMRSSavePersonAttribute(phoneNumberAttributeType, (String) phoneNumberObs.get("phoneNumber"));
             attributes.add(phoneNumberAttribute);
         }
 
